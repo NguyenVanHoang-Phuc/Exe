@@ -1,0 +1,376 @@
+﻿@model MiniBitMVC.Models.ExpenseModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<!-- MiniBit Character -->
+<div class="container mt-4">
+    <div class="minibit-character" id="minibitCharacter">
+        <div class="character-avatar">
+            <span class="character-emoji">🍃</span>
+        </div>
+        <div class="character-message">
+            <p id="characterMessage">Chào bạn! Hôm nay bạn chưa ghi nhận chi tiêu nào nhé! 💚</p>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications -->
+<div class="container mt-3" id="notificationsContainer">
+    @if (Model.Notifications.Any())
+    {
+        @foreach (var notification in Model.Notifications)
+        {
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-bell me-2"></i>
+                @notification
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+    }
+</div>
+
+<div class="container mt-4">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills nav-fill minibit-tabs mb-4" id="mainTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="dashboard-tab" data-bs-toggle="pill" data-bs-target="#dashboard" type="button" role="tab">
+                <i class="fas fa-chart-pie me-2"></i>Tổng quan
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="expenses-tab" data-bs-toggle="pill" data-bs-target="#expenses" type="button" role="tab">
+                <i class="fas fa-wallet me-2"></i>Chi tiêu
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="goals-tab" data-bs-toggle="pill" data-bs-target="#goals" type="button" role="tab">
+                <i class="fas fa-bullseye me-2"></i>Mục tiêu
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="analytics-tab" data-bs-toggle="pill" data-bs-target="#analytics" type="button" role="tab">
+                <i class="fas fa-chart-line me-2"></i>Phân tích
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="mainTabContent">
+        <!-- Dashboard Tab -->
+        <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+            <div class="row g-4 mb-4">
+                <!-- Today's Spending -->
+                <div class="col-md-4">
+                    <div class="card minibit-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-title mb-0">Chi tiêu hôm nay</h6>
+                                <i class="fas fa-coins text-primary"></i>
+                            </div>
+                            <h3 class="text-primary mb-2" id="todayTotal">@Model.TodayTotal.ToString("N0")đ</h3>
+                            <div class="progress mb-2" style="height: 8px;">
+                                <div class="progress-bar bg-primary" role="progressbar" id="todayProgress" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted">Giới hạn: <span id="dailyLimitDisplay">@Model.SavingsGoal.DailyLimit.ToString("N0")đ</span></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Spending -->
+                <div class="col-md-4">
+                    <div class="card minibit-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-title mb-0">Chi tiêu tháng này</h6>
+                                <i class="fas fa-calendar text-success"></i>
+                            </div>
+                            <h3 class="text-success mb-2" id="monthlyTotal">@Model.MonthlyTotal.ToString("N0")đ</h3>
+                            <div class="progress mb-2" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" id="monthlyProgress" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted">Mục tiêu: <span id="monthlyTargetDisplay">@Model.SavingsGoal.MonthlyTarget.ToString("N0")đ</span></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Savings -->
+                <div class="col-md-4">
+                    <div class="card minibit-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-title mb-0">Tiết kiệm dự kiến</h6>
+                                <i class="fas fa-piggy-bank text-warning"></i>
+                            </div>
+                            <h3 class="mb-2" id="savingsAmount">@Model.MonthlySavings.ToString("N0")đ</h3>
+                            <small class="text-muted" id="savingsStatus">
+                                @(Model.MonthlySavings >= 0 ? "Đang tiết kiệm tốt!" : "Cần cải thiện!")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Expenses -->
+            <div class="card minibit-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Chi tiêu gần đây</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recentExpenses">
+                        @if (!Model.Expenses.Any())
+                        {
+                            <div class="text-center py-5">
+                                <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Chưa có chi tiêu nào được ghi nhận</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var expense in Model.Expenses.OrderByDescending(e => e.Date).Take(5))
+                            {
+                                <div class="expense-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="expense-icon me-3">
+                                            @if (expense.Type == ExpenseModels.ExpenseType.Good)
+                                            {
+                                                <i class="fas fa-check-circle text-success"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-danger"></i>
+                                            }
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">@expense.Category</h6>
+                                            <p class="mb-0 text-muted small">@expense.Description</p>
+                                        </div>
+                                        <div class="text-end">
+                                            <strong>@expense.Amount.ToString("N0")đ</strong>
+                                            <br>
+                                            <small class="text-muted">@expense.Date.ToString("dd/MM")</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses Tab -->
+        <div class="tab-pane fade" id="expenses" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Quản lý chi tiêu</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                    <i class="fas fa-plus me-2"></i>Thêm chi tiêu
+                </button>
+            </div>
+
+            <div class="row g-4">
+                <!-- Good Expenses -->
+                <div class="col-md-6">
+                    <div class="card minibit-card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-trending-up me-2"></i>Chi tiêu tốt
+                            </h5>
+                        </div>
+                        <div class="card-body" id="goodExpenses">
+                            @foreach (var expense in Model.Expenses.Where(e => e.Type == ExpenseModels.ExpenseType.Good))
+                            {
+                                <div class="expense-item bg-success bg-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@expense.Category</h6>
+                                            <p class="mb-0 text-muted small">@expense.Description</p>
+                                        </div>
+                                        <strong class="text-success">@expense.Amount.ToString("N0")đ</strong>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bad Expenses -->
+                <div class="col-md-6">
+                    <div class="card minibit-card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-trending-down me-2"></i>Chi tiêu xấu
+                            </h5>
+                        </div>
+                        <div class="card-body" id="badExpenses">
+                            @foreach (var expense in Model.Expenses.Where(e => e.Type == ExpenseModels.ExpenseType.Bad))
+                            {
+                                <div class="expense-item bg-danger bg-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@expense.Category</h6>
+                                            <p class="mb-0 text-muted small">@expense.Description</p>
+                                        </div>
+                                        <strong class="text-danger">@expense.Amount.ToString("N0")đ</strong>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goals Tab -->
+        <div class="tab-pane fade" id="goals" role="tabpanel">
+            <div class="card minibit-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bullseye me-2"></i>Thiết lập mục tiêu tiết kiệm
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="savingsGoalForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="monthlyTarget" class="form-label">Mục tiêu tiết kiệm tháng (đ)</label>
+                                <input type="number" class="form-control" id="monthlyTarget" value="@Model.SavingsGoal.MonthlyTarget" placeholder="Nhập số tiền muốn tiết kiệm">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="dailyLimit" class="form-label">Giới hạn chi tiêu hàng ngày (đ)</label>
+                                <input type="number" class="form-control" id="dailyLimit" value="@Model.SavingsGoal.DailyLimit" placeholder="Nhập giới hạn chi tiêu mỗi ngày">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Lưu mục tiêu</button>
+                    </form>
+
+                    <div class="mt-4" id="goalSummary" style="display: none;">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">Kế hoạch chi tiêu của bạn:</h6>
+                            <p class="mb-1">💰 Mục tiêu tiết kiệm: <strong id="targetDisplay"></strong></p>
+                            <p class="mb-1">📅 Chi tiêu tối đa mỗi ngày: <strong id="limitDisplay"></strong></p>
+                            <p class="mb-0">📊 Tiến độ tháng này: <strong id="progressDisplay"></strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div class="tab-pane fade" id="analytics" role="tabpanel">
+            <div class="card minibit-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Phân tích chi tiêu</h5>
+                </div>
+                <div class="card-body">
+                    <div id="premiumContent" style="display: none;">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Phân tích theo danh mục</h6>
+                                    </div>
+                                    <div class="card-body" id="categoryAnalysis">
+                                        <!-- Category analysis will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Gợi ý tiết kiệm thông minh</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="smart-tip bg-success bg-opacity-10 p-3 rounded mb-3">
+                                            <h6 class="text-success">💡 Gợi ý</h6>
+                                            <p class="mb-0 small">Bạn có thể tiết kiệm 15% bằng cách giảm chi tiêu "Giải trí" xuống còn 500k/tháng</p>
+                                        </div>
+                                        <div class="smart-tip bg-info bg-opacity-10 p-3 rounded mb-3">
+                                            <h6 class="text-info">📈 Xu hướng</h6>
+                                            <p class="mb-0 small">Chi tiêu "Ăn uống" tăng 20% so với tháng trước. Hãy cân nhắc nấu ăn tại nhà nhiều hơn!</p>
+                                        </div>
+                                        <div class="smart-tip bg-primary bg-opacity-10 p-3 rounded">
+                                            <h6 class="text-primary">🎯 Mục tiêu</h6>
+                                            <p class="mb-0 small">Nếu duy trì mức chi tiêu hiện tại, bạn sẽ đạt mục tiêu tiết kiệm trong 8 tháng!</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="premiumPromo" class="text-center py-5">
+                        <i class="fas fa-crown fa-4x text-warning mb-4"></i>
+                        <h3 class="mb-3">Tính năng Premium</h3>
+                        <p class="text-muted mb-4">Nâng cấp để xem phân tích chi tiết, so sánh theo tháng và nhận gợi ý tiết kiệm thông minh!</p>
+                        <button class="btn btn-premium btn-lg" onclick="upgradeToPremium()">
+                            <i class="fas fa-crown me-2"></i>Nâng cấp Premium - 29k/tháng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm chi tiêu mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addExpenseForm">
+                    <div class="mb-3">
+                        <label for="expenseAmount" class="form-label">Số tiền</label>
+                        <input type="number" class="form-control" id="expenseAmount" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expenseCategory" class="form-label">Danh mục</label>
+                        <select class="form-select" id="expenseCategory" required>
+                            <option value="">Chọn danh mục</option>
+                            <option value="Ăn uống">Ăn uống</option>
+                            <option value="Di chuyển">Di chuyển</option>
+                            <option value="Mua sắm">Mua sắm</option>
+                            <option value="Giải trí">Giải trí</option>
+                            <option value="Học tập">Học tập</option>
+                            <option value="Sức khỏe">Sức khỏe</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expenseDescription" class="form-label">Mô tả</label>
+                        <textarea class="form-control" id="expenseDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phân loại</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="expenseType" id="goodExpense" value="good" checked>
+                            <label class="btn btn-outline-success" for="goodExpense">
+                                <i class="fas fa-thumbs-up me-2"></i>Chi tiêu tốt
+                            </label>
+                            <input type="radio" class="btn-check" name="expenseType" id="badExpense" value="bad">
+                            <label class="btn btn-outline-danger" for="badExpense">
+                                <i class="fas fa-thumbs-down me-2"></i>Chi tiêu xấu
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="addExpense()">Thêm chi tiêu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize data from server
+        window.expensesData = @Html.Raw(Json.Serialize(Model.Expenses));
+        window.savingsGoalData = @Html.Raw(Json.Serialize(Model.SavingsGoal));
+        window.isPremium = @Html.Raw(Json.Serialize(Model.IsPremium));
+    </script>
+}

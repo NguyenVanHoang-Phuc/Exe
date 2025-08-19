@@ -1,0 +1,68 @@
+﻿@model MiniBitMVC.Models.ExpenseModels.DashboardViewModel
+
+<div class="minibit-character" id="minibitCharacter">
+    <div class="character-container">
+        <div class="character-avatar" data-bs-toggle="tooltip" data-bs-placement="top" title="MiniBit - Trợ lý tài chính của bạn">
+            <span class="character-emoji" id="characterEmoji">🍃</span>
+            <div class="character-mood-indicator" id="moodIndicator"></div>
+        </div>
+        <div class="character-speech-bubble">
+            <div class="speech-content">
+                <p class="character-message" id="characterMessage">
+                    Chào bạn! Hôm nay bạn chưa ghi nhận chi tiêu nào nhé! 💚
+                </p>
+                <div class="character-stats">
+                    <small class="text-muted">
+                        <i class="fas fa-fire text-orange"></i>
+                        Streak: <span id="streakCount">7</span> ngày
+                    </small>
+                </div>
+            </div>
+            <div class="speech-arrow"></div>
+        </div>
+    </div>
+
+    <!-- Character Actions -->
+    <div class="character-actions mt-3">
+        <button class="btn btn-sm btn-outline-primary" onclick="showTip()" data-bs-toggle="tooltip" title="Xem mẹo tiết kiệm">
+            <i class="fas fa-lightbulb"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-success" onclick="showEncouragement()" data-bs-toggle="tooltip" title="Động viên">
+            <i class="fas fa-heart"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-info" onclick="showStats()" data-bs-toggle="tooltip" title="Thống kê nhanh">
+            <i class="fas fa-chart-bar"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+    function showTip() {
+        const tips = [
+            "💡 Hãy ghi chép chi tiêu ngay sau khi mua để không quên!",
+            "💡 Đặt mục tiêu nhỏ trước, rồi từ từ tăng lên!",
+            "💡 Phân biệt 'muốn' và 'cần' trước khi mua!",
+            "💡 Nấu ăn tại nhà giúp tiết kiệm rất nhiều!",
+            "💡 So sánh giá trước khi mua những món đắt tiền!"
+        ];
+        const randomTip = tips[Math.floor(Math.random() * tips.length)];
+        document.getElementById('characterMessage').textContent = randomTip;
+    }
+
+    function showEncouragement() {
+        const encouragements = [
+            "🌟 Bạn đang làm rất tốt! Tiếp tục nhé!",
+            "💪 Mỗi đồng tiết kiệm đều có ý nghĩa!",
+            "🎯 Bạn đang tiến gần đến mục tiêu!",
+            "🏆 Thói quen tốt sẽ mang lại thành công!",
+            "✨ Tương lai tài chính tươi sáng đang chờ bạn!"
+        ];
+        const randomEncouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
+        document.getElementById('characterMessage').textContent = randomEncouragement;
+    }
+
+    function showStats() {
+        // This would show quick stats - implement based on your needs
+        document.getElementById('characterMessage').textContent = "📊 Hôm nay bạn đã tiết kiệm được 50% so với ngày hôm qua!";
+    }
+</script>

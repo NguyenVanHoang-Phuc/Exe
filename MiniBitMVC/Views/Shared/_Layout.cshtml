@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MINIBIT</title>
+    <meta name="description" content="Quản lý tài chính cá nhân dễ dàng như trò chơi với MiniBit" />
+    <meta name="keywords" content="quản lý tài chính, tiết kiệm, chi tiêu, MiniBit" />
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="~/css/minibit.css" rel="stylesheet" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="~/images/LogoMiniBit.png">
+</head>
+<body>
+    <!-- Header -->
+    <header class="minibit-header sticky-top">
+        <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg navbar-light">
+                <div class="container">
+                    <!-- Brand -->
+                    <a class="navbar-brand d-flex align-items-center" href="@Url.Action("Index", "Home")">
+                        <img src="~/images/LogoMiniBit.png" alt="MiniBit" class="minibit-logo me-3">
+                        <div>
+                            <h1 class="minibit-title mb-0">MINIBIT</h1>
+                            <small class="minibit-subtitle">Quản lý tiền dễ như trò chơi</small>
+                        </div>
+                    </a>
+
+                    <!-- Mobile Toggle -->
+                    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <!-- Navigation -->
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Action("Index", "Home")">
+                                    <i class="fas fa-home me-1"></i>Trang chủ
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#expenses">
+                                    <i class="fas fa-wallet me-1"></i>Chi tiêu
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#goals">
+                                    <i class="fas fa-bullseye me-1"></i>Mục tiêu
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#analytics">
+                                    <i class="fas fa-chart-line me-1"></i>Phân tích
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Right Side -->
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- Notifications -->
+                            <div class="notification-container">
+                                <button class="notification-bell" id="notificationBell" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-bell"></i>
+                                    <span class="notification-badge" id="notificationBadge">0</span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end notification-dropdown" id="notificationDropdown">
+                                    <div class="dropdown-header">
+                                        <h6 class="mb-0">Thông báo</h6>
+                                    </div>
+                                    <div class="notification-list" id="notificationList">
+                                        <div class="dropdown-item-text text-center text-muted py-3">
+                                            Không có thông báo mới
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- User Menu -->
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user me-1"></i>Tài khoản
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Cài đặt</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i>Hỗ trợ</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                </ul>
+                            </div>
+
+                            <!-- Premium Button -->
+                            <button class="btn btn-premium" id="premiumBtn" type="button">
+                                <i class="fas fa-crown me-2"></i>
+                                <span id="premiumText">Nâng cấp Premium</span>
+                                <small class="d-block">29k/tháng</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="minibit-footer mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="~/images/LogoMiniBit.png" alt="MiniBit" class="footer-logo me-2">
+                        <div>
+                            <h5 class="text-white mb-0">MINIBIT</h5>
+                            <small class="text-light">Quản lý tiền dễ như trò chơi</small>
+                        </div>
+                    </div>
+                    <p class="text-light">
+                        Ứng dụng quản lý tài chính thông minh dành cho Gen Z.
+                        Giúp bạn phát triển thói quen tài chính tốt một cách vui vẻ và hiệu quả.
+                    </p>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white mb-3">Tính năng</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light text-decoration-none">Quản lý chi tiêu</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Mục tiêu tiết kiệm</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Phân tích thông minh</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Thông báo tự động</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white mb-3">Hỗ trợ</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light text-decoration-none">Hướng dẫn sử dụng</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">FAQ</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Liên hệ</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Báo lỗi</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white mb-3">Pháp lý</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light text-decoration-none">Điều khoản</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Bảo mật</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Cookie</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white mb-3">Kết nối</h6>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-outline-light btn-sm">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-light btn-sm">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-light btn-sm">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-light btn-sm">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4 border-light">
+
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="text-light mb-0">
+                        &copy; @DateTime.Now.Year MiniBit. Tất cả quyền được bảo lưu.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-light mb-0">
+                        Phiên bản 1.0.0 | Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy")
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+            <p class="mt-3 text-primary">Đang xử lý...</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer">
+        <!-- Toasts will be inserted here -->
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/minibit.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Initialize App -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Initialize popovers
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+        });
+    </script>
+</body>
+</html>
