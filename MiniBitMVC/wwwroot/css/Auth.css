@@ -1,0 +1,444 @@
+﻿/* ===== Palette (giữ đúng các biến đã chốt) ===== */
+:root {
+    --minibit-primary: #8b5cf6;
+    --minibit-secondary: #10b981;
+    --minibit-accent: #f59e0b;
+    --minibit-danger: #ef4444;
+    --minibit-success: #22c55e;
+    --minibit-warning: #f59e0b;
+    --minibit-info: #3b82f6;
+}
+
+/* ===== Reset & Base ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box
+}
+
+html, body {
+    height: 100%
+}
+
+body {
+    font-family: "Inter","Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+    background: linear-gradient(135deg,#f3e8ff 0%, #ecfdf5 100%);
+    color: #111827;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== Layout ===== */
+.login-container {
+    display: flex;
+    min-height: 100vh
+}
+
+.brand-section {
+    flex: 1;
+    /* gradient chỉ dùng biến màu */
+    background: linear-gradient(135deg, var(--minibit-primary) 0%, var(--minibit-info) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    padding: 32px;
+}
+
+.brand-logo img {
+    width: 180px;
+    max-width: 60vw;
+    height: auto;
+    margin-bottom: 28px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+.brand-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-align: center;
+    text-shadow: 0 2px 6px rgba(0,0,0,.25)
+}
+
+.login-section {
+    flex: 1;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
+}
+
+.login-form-container {
+    width: 100%;
+    max-width: 420px
+}
+
+.login-title {
+    font-size: 2rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 28px;
+    color: var(--minibit-primary)
+}
+
+/* ===== Form ===== */
+.form-group {
+    margin-bottom: 20px
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #374151;
+    font-weight: 600
+}
+
+.required {
+    color: var(--minibit-danger)
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+    .form-input::placeholder {
+        color: #9ca3af
+    }
+
+    .form-input:focus {
+        outline: 0;
+        border-color: var(--minibit-primary);
+        box-shadow: 0 0 0 .2rem rgba(139,92,246,.25);
+    }
+
+/* remember + forgot */
+.form-row-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #374151;
+    cursor: pointer
+}
+
+    .checkbox input {
+        width: 16px;
+        height: 16px
+    }
+
+.link-muted {
+    color: #6b7280;
+    text-decoration: none
+}
+
+    .link-muted:hover {
+        color: var(--minibit-primary)
+    }
+
+/* Main CTA */
+.login-btn {
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.05rem;
+    cursor: pointer;
+    background: linear-gradient(45deg,var(--minibit-primary),var(--minibit-info));
+    box-shadow: 0 10px 20px rgba(139,92,246,.25);
+    transition: transform .15s, filter .15s;
+}
+
+    .login-btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(.96)
+    }
+
+    .login-btn:active {
+        transform: translateY(0)
+    }
+
+/* Divider */
+.divider {
+    position: relative;
+    text-align: center;
+    margin: 26px 0;
+    color: #6b7280
+}
+
+    .divider::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 1px;
+        background: #e5e7eb
+    }
+
+    .divider span {
+        position: relative;
+        z-index: 1;
+        padding: 0 16px;
+        background: #fff
+    }
+
+/* OAuth button (Google) */
+.oauth-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    background: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+    .oauth-btn img {
+        width: 20px;
+        height: 20px
+    }
+
+    .oauth-btn:hover {
+        background: #f9fafb;
+        border-color: #d1d5db
+    }
+
+    .oauth-btn.google span {
+        color: #374151
+    }
+
+/* Register link */
+.register-link {
+    text-align: center;
+    color: #6b7280
+}
+
+    .register-link a {
+        color: var(--minibit-primary);
+        text-decoration: none;
+        font-weight: 700
+    }
+
+        .register-link a:hover {
+            text-decoration: underline
+        }
+
+/* Alerts (nếu dùng bootstrap thì có sẵn; ở đây chỉ tinh nhẹ) */
+.alert {
+    text-align: center;
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 16px
+}
+
+.alert-success {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0
+}
+
+.alert-danger {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 992px) {
+    .brand-title {
+        font-size: 1.6rem
+    }
+}
+
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column
+    }
+
+    .brand-section {
+        height: 220px
+    }
+
+    .brand-logo img {
+        width: 120px;
+        margin-bottom: 14px
+    }
+
+    .login-section {
+        padding: 24px
+    }
+
+    .login-title {
+        font-size: 1.6rem
+    }
+}
+
+/* toggle mắt mật khẩu */
+.pwd-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: var(--minibit-muted);
+}
+
+    .pwd-toggle:hover {
+        color: var(--minibit-primary);
+    }
+
+
+
+
+/* bổ sung rất nhẹ, vẫn bám Auth.css */
+.profile-wrap {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 0 16px;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 450px 1fr;
+    gap: 24px;
+}
+
+.profile-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.05);
+    overflow: hidden;
+}
+
+    .profile-card .card-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid #f1f5f9;
+        font-weight: 800;
+        color: var(--minibit-primary);
+        background: linear-gradient(180deg,#fff,#fafafa);
+    }
+
+    .profile-card .card-body {
+        padding: 18px;
+    }
+
+.pf-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+
+    object-fit: cover;
+    border: 3px solid rgba(139,92,246,.2);
+    box-shadow: 0 8px 24px rgba(139,92,246,.15);
+}
+
+.pf-avatar-upload {
+    position: relative;
+    display: inline-block;
+}
+
+    .pf-avatar-upload .upload-btn {
+        position: absolute;
+        right: -6px;
+        bottom: -6px;
+        border: 0;
+        background: #fff;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,.12);
+        color: var(--minibit-primary);
+        cursor: pointer;
+    }
+
+.insight-box {
+    border: 1px dashed rgba(0,0,0,.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: #fafafa;
+    color: #374151;
+}
+
+@media(max-width:992px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* phóng to card cơ bản hơn một chút */
+.profile-card.basic .card-body {
+    padding: 28px; /* rộng hơn mặc định 18px */
+}
+
+/* avatar lớn hơn */
+.profile-card.basic .pf-avatar {
+    width: 140px;
+    height: 140px;
+    border-width: 4px;
+}
+
+/* input form nhìn thoáng hơn */
+.profile-card.basic .form-input {
+    padding: 14px 16px;
+    font-size: 1.05rem;
+}
+
+/* nút lưu căn giữa, nổi bật */
+.profile-card.basic .login-btn {
+    display: block;
+    margin: 28px auto 0;
+    min-width: 260px;
+}
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

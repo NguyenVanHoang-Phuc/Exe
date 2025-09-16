@@ -160,65 +160,103 @@
 
         <!-- Expenses Tab -->
         <div class="tab-pane fade" id="expenses" role="tabpanel">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>Quản lý chi tiêu</h2>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-                    <i class="fas fa-plus me-2"></i>Thêm chi tiêu
-                </button>
-            </div>
 
-            <div class="row g-4">
-                <!-- Good Expenses -->
-                <div class="col-md-6">
-                    <div class="card minibit-card">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-trending-up me-2"></i>Chi tiêu tốt
-                            </h5>
+            <!-- Toolbar lọc & hành động -->
+            <div class="card minibit-card mb-4">
+                <div class="card-body">
+                    <div class="expense-toolbar d-flex flex-wrap gap-2 align-items-center">
+                        <div class="btn-group" role="group" aria-label="type">
+                            <button class="btn btn-light chip active" data-type="all"><i class="fas fa-list-ul me-1"></i>Tất cả</button>
+                            <button class="btn btn-light chip" data-type="good"><i class="fas fa-thumbs-up me-1"></i>Tốt</button>
+                            <button class="btn btn-light chip" data-type="bad"><i class="fas fa-thumbs-down me-1"></i>Xấu</button>
                         </div>
-                        <div class="card-body" id="goodExpenses">
-                            @foreach (var expense in Model.Expenses.Where(e => e.Type == ExpenseModels.ExpenseType.Good))
-                            {
-                                <div class="expense-item bg-success bg-opacity-10">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1">@expense.Category</h6>
-                                            <p class="mb-0 text-muted small">@expense.Description</p>
-                                        </div>
-                                        <strong class="text-success">@expense.Amount.ToString("N0")đ</strong>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Bad Expenses -->
-                <div class="col-md-6">
-                    <div class="card minibit-card">
-                        <div class="card-header bg-danger text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-trending-down me-2"></i>Chi tiêu xấu
-                            </h5>
+                        <div class="vr mx-2 d-none d-md-block"></div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <select class="form-select form-select-sm filter-select" id="filterRange">
+                                <option value="month">Tháng này</option>
+                                <option value="last30">30 ngày qua</option>
+                                <option value="week">Tuần này</option>
+                                <option value="custom">Tùy chỉnh…</option>
+                            </select>
+                            <select class="form-select form-select-sm filter-select" id="filterCategory">
+                                <option value="">Danh mục (tất cả)</option>
+                                <option>Ăn uống</option>
+                                <option>Di chuyển</option>
+                                <option>Mua sắm</option>
+                                <option>Giải trí</option>
+                                <option>Học tập</option>
+                                <option>Sức khỏe</option>
+                                <option>Khác</option>
+                            </select>
+                            <select class="form-select form-select-sm filter-select" id="filterSort">
+                                <option value="date_desc">Mới nhất</option>
+                                <option value="date_asc">Cũ nhất</option>
+                                <option value="amount_desc">Số tiền ↓</option>
+                                <option value="amount_asc">Số tiền ↑</option>
+                            </select>
                         </div>
-                        <div class="card-body" id="badExpenses">
-                            @foreach (var expense in Model.Expenses.Where(e => e.Type == ExpenseModels.ExpenseType.Bad))
-                            {
-                                <div class="expense-item bg-danger bg-opacity-10">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1">@expense.Category</h6>
-                                            <p class="mb-0 text-muted small">@expense.Description</p>
-                                        </div>
-                                        <strong class="text-danger">@expense.Amount.ToString("N0")đ</strong>
-                                    </div>
-                                </div>
-                            }
+
+                        <div class="ms-auto">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                                <i class="fas fa-plus me-2"></i>Thêm chi tiêu
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- 3 “pill” thống kê nhanh -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-pill">
+                        <div class="label"><i class="fas fa-calendar-day me-2"></i>Hôm nay</div>
+                        <div class="value text-primary" id="pillToday">0đ</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-pill">
+                        <div class="label"><i class="fas fa-calendar-alt me-2"></i>Tháng này</div>
+                        <div class="value text-success" id="pillMonth">0đ</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-pill">
+                        <div class="label"><i class="fas fa-piggy-bank me-2"></i>Tiết kiệm dự kiến</div>
+                        <div class="value text-warning" id="pillSaving">0đ</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danh sách chi tiêu -->
+            <div class="card minibit-card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0"><i class="fas fa-wallet me-2"></i>Danh sách chi tiêu</h5>
+                    <small class="text-muted" id="listCount">(0 mục)</small>
+                </div>
+                <div class="card-body p-0">
+                    <div id="expenseList" class="list-group list-group-flush">
+                        <!-- JS sẽ render các hàng từ window.expensesData -->
+                    </div>
+
+                    <!-- Empty state -->
+                    <div id="expenseEmpty" class="text-center py-5 d-none">
+                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-3">Chưa có chi tiêu nào phù hợp bộ lọc.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                            <i class="fas fa-plus me-2"></i>Thêm chi tiêu đầu tiên
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nút thêm nổi (mobile) -->
+            <button class="btn btn-primary sticky-add-btn d-md-none" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
+
 
         <!-- Goals Tab -->
         <div class="tab-pane fade" id="goals" role="tabpanel">
@@ -256,61 +294,112 @@
         </div>
 
         <!-- Analytics Tab -->
+        <!-- Analytics Tab -->
         <div class="tab-pane fade" id="analytics" role="tabpanel">
             <div class="card minibit-card">
-                <div class="card-header">
-                    <h5 class="mb-0">Phân tích chi tiêu</h5>
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Phân tích chi tiêu</h5>
+                    <div class="text-muted small" id="analyticsRangeLabel"></div>
                 </div>
+
                 <div class="card-body">
-                    <div id="premiumContent" style="display: none;">
+
+                    <!-- Promo khi chưa Premium -->
+                    <div id="premiumPromo" class="text-center py-5">
+                        <i class="fas fa-crown fa-4x text-warning mb-4"></i>
+                        <h3 class="mb-2">Tính năng Premium</h3>
+                        <p class="text-muted mb-4">
+                            Mở khóa biểu đồ, xu hướng và gợi ý tiết kiệm thông minh.
+                        </p>
+                        <button class="btn btn-premium btn-lg" id="unlockPremiumBtn">
+                            <i class="fas fa-crown me-2"></i>Nâng cấp Premium - 29k/tháng
+                        </button>
+                    </div>
+
+                    <!-- Nội dung Premium -->
+                    <div id="premiumContent" style="display:none">
+
+                        <!-- KPI Cards -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Tổng chi tháng</div>
+                                    <div class="kpi-value" id="kpiMonthTotal">0đ</div>
+                                    <div class="kpi-sub" id="kpiMonthCompare">So với tháng trước: —</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Chi trung bình/ngày</div>
+                                    <div class="kpi-value" id="kpiAvgDay">0đ</div>
+                                    <div class="kpi-sub text-success" id="kpiLimitHint">Trong giới hạn 🎯</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Danh mục lớn nhất</div>
+                                    <div class="kpi-value" id="kpiTopCat">—</div>
+                                    <div class="kpi-sub" id="kpiTopCatAmt">0đ</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Tỷ lệ “xấu”</div>
+                                    <div class="kpi-value" id="kpiBadRate">0%</div>
+                                    <div class="kpi-sub" id="kpiBadCount">0 giao dịch</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts -->
                         <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6 class="mb-0">Phân tích theo danh mục</h6>
-                                    </div>
-                                    <div class="card-body" id="categoryAnalysis">
-                                        <!-- Category analysis will be populated by JavaScript -->
+                            <div class="col-lg-6">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-header"><h6 class="mb-0">Theo danh mục</h6></div>
+                                    <div class="card-body">
+                                        <canvas id="chartByCategory" height="240"></canvas>
+                                        <ul class="legend tiny mt-3" id="catLegend"></ul>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6 class="mb-0">Gợi ý tiết kiệm thông minh</h6>
-                                    </div>
+
+                            <div class="col-lg-6">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-header"><h6 class="mb-0">Theo ngày (tháng này)</h6></div>
                                     <div class="card-body">
-                                        <div class="smart-tip bg-success bg-opacity-10 p-3 rounded mb-3">
-                                            <h6 class="text-success">💡 Gợi ý</h6>
-                                            <p class="mb-0 small">Bạn có thể tiết kiệm 15% bằng cách giảm chi tiêu "Giải trí" xuống còn 500k/tháng</p>
-                                        </div>
-                                        <div class="smart-tip bg-info bg-opacity-10 p-3 rounded mb-3">
-                                            <h6 class="text-info">📈 Xu hướng</h6>
-                                            <p class="mb-0 small">Chi tiêu "Ăn uống" tăng 20% so với tháng trước. Hãy cân nhắc nấu ăn tại nhà nhiều hơn!</p>
-                                        </div>
-                                        <div class="smart-tip bg-primary bg-opacity-10 p-3 rounded">
-                                            <h6 class="text-primary">🎯 Mục tiêu</h6>
-                                            <p class="mb-0 small">Nếu duy trì mức chi tiêu hiện tại, bạn sẽ đạt mục tiêu tiết kiệm trong 8 tháng!</p>
+                                        <canvas id="chartByDay" height="240"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-7">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-header"><h6 class="mb-0">Xu hướng 6 tháng</h6></div>
+                                    <div class="card-body">
+                                        <canvas id="chartTrend" height="220"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-5">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-header"><h6 class="mb-0">Top 5 danh mục</h6></div>
+                                    <div class="card-body">
+                                        <ol class="topcat" id="topCatList"></ol>
+                                        <div class="smart-tip bg-success bg-opacity-10 p-3 rounded mt-3">
+                                            <h6 class="text-success mb-1">💡 Gợi ý</h6>
+                                            <p class="mb-0 small" id="tipSmart">—</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div id="premiumPromo" class="text-center py-5">
-                        <i class="fas fa-crown fa-4x text-warning mb-4"></i>
-                        <h3 class="mb-3">Tính năng Premium</h3>
-                        <p class="text-muted mb-4">Nâng cấp để xem phân tích chi tiết, so sánh theo tháng và nhận gợi ý tiết kiệm thông minh!</p>
-                        <button class="btn btn-premium btn-lg" onclick="upgradeToPremium()">
-                            <i class="fas fa-crown me-2"></i>Nâng cấp Premium - 29k/tháng
-                        </button>
-                    </div>
+                    </div><!-- /premiumContent -->
+
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
 <!-- Add Expense Modal -->
 <div class="modal fade" id="addExpenseModal" tabindex="-1">
@@ -367,10 +456,496 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script>
         // Initialize data from server
         window.expensesData = @Html.Raw(Json.Serialize(Model.Expenses));
         window.savingsGoalData = @Html.Raw(Json.Serialize(Model.SavingsGoal));
         window.isPremium = @Html.Raw(Json.Serialize(Model.IsPremium));
     </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Progress bar hiệu ứng
+            const todayProgress = document.getElementById("todayProgress");
+            if (todayProgress) {
+                todayProgress.style.width = "0%";
+                setTimeout(() => { todayProgress.style.width = "65%"; }, 200);
+            }
+
+            const monthlyProgress = document.getElementById("monthlyProgress");
+            if (monthlyProgress) {
+                monthlyProgress.style.width = "0%";
+                setTimeout(() => { monthlyProgress.style.width = "45%"; }, 200);
+            }
+
+            // Character message ngẫu nhiên
+            const messages = [
+                "Hãy ghi chi tiêu để quản lý ví tiền tốt hơn! 💡",
+                "Đừng quên đặt mục tiêu tiết kiệm nhé! 🎯",
+                "Bạn có thể giảm 10% ăn ngoài để tiết kiệm nhiều hơn 🍜",
+                "Tiết kiệm nhỏ, thành công lớn 💚"
+            ];
+            const characterMessage = document.getElementById("characterMessage");
+            if (characterMessage) {
+                const random = Math.floor(Math.random() * messages.length);
+                characterMessage.textContent = messages[random];
+            }
+
+            // Tab smooth scroll (Bootstrap có sẵn, nhưng thêm animation)
+            const triggerTabList = document.querySelectorAll('#mainTabs button');
+            triggerTabList.forEach(tab => {
+                tab.addEventListener('shown.bs.tab', (event) => {
+                    document.querySelector(event.target.dataset.bsTarget)
+                        .scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+
+            // Premium toggle (chỉ UI demo)
+            const premiumPromo = document.getElementById("premiumPromo");
+            const premiumContent = document.getElementById("premiumContent");
+            if (premiumPromo && premiumContent) {
+                // demo: click nút nâng cấp → ẩn promo, hiện content
+                premiumPromo.querySelector("button")?.addEventListener("click", () => {
+                    premiumPromo.style.display = "none";
+                    premiumContent.style.display = "block";
+                });
+            }
+        });
+    </script>
+
+    <script>
+        (function () {
+          const raw = (window.expensesData || []).map(e => ({
+            ...e,
+            // Chuẩn hóa một vài field đề phòng null/khác tên:
+            Type: (e.Type || e.type || '').toString().toLowerCase(), // "good" | "bad"
+            Amount: Number(e.Amount ?? e.amount ?? 0),
+            Category: e.Category || e.category || '',
+            Description: e.Description || e.description || '',
+            Date: e.Date ? new Date(e.Date) : new Date()
+          }));
+
+          // refs
+          const $list = document.getElementById('expenseList');
+          const $empty = document.getElementById('expenseEmpty');
+          const $listCount = document.getElementById('listCount');
+          const $pillToday = document.getElementById('pillToday');
+          const $pillMonth = document.getElementById('pillMonth');
+          const $pillSaving = document.getElementById('pillSaving');
+          const $chips = document.querySelectorAll('.chip');
+          const $range = document.getElementById('filterRange');
+          const $cat = document.getElementById('filterCategory');
+          const $sort = document.getElementById('filterSort');
+
+          // state filter
+          let filter = { type: 'all', range: 'month', category: '', sort: 'date_desc' };
+
+          // events
+          $chips.forEach(ch => ch.addEventListener('click', () => {
+            $chips.forEach(c => c.classList.remove('active'));
+            ch.classList.add('active');
+            filter.type = ch.dataset.type;
+            render();
+          }));
+          [$range, $cat, $sort].forEach(sel => sel?.addEventListener('change', () => {
+            filter.range = $range.value;
+            filter.category = $cat.value || '';
+            filter.sort = $sort.value;
+            render();
+          }));
+
+          // helpers
+          const sameDay = (a,b)=> a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+          function inRange(d, key){
+            const now = new Date();
+            if(key==='month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+            if(key==='week'){
+              const first = new Date(now); first.setDate(now.getDate()-now.getDay()); // CN đầu tuần
+              const last = new Date(first); last.setDate(first.getDate()+6);
+              return d>=first && d<=last;
+            }
+            if(key==='last30'){
+              const from = new Date(now); from.setDate(now.getDate()-30);
+              return d>=from && d<=now;
+            }
+            return true; // custom: để true (UI demo)
+          }
+          const vnd = n => (n||0).toLocaleString('vi-VN') + 'đ';
+
+          function calcPills(items){
+            const now = new Date();
+            const todaySum = items.filter(x => sameDay(x.Date, now))
+                                  .reduce((s,x)=> s + x.Amount, 0);
+            const monthSum = items.filter(x => x.Date.getFullYear()===now.getFullYear() && x.Date.getMonth()===now.getMonth())
+                                  .reduce((s,x)=> s + x.Amount, 0);
+            // demo “tiết kiệm”: giả sử tổng tốt - tổng xấu trong tháng
+            const good = items.filter(x => x.Date.getFullYear()===now.getFullYear() && x.Date.getMonth()===now.getMonth() && x.Type==='good')
+                              .reduce((s,x)=> s + x.Amount, 0);
+            const bad  = items.filter(x => x.Date.getFullYear()===now.getFullYear() && x.Date.getMonth()===now.getMonth() && x.Type==='bad')
+                              .reduce((s,x)=> s + x.Amount, 0);
+            $pillToday.textContent = vnd(todaySum);
+            $pillMonth.textContent = vnd(monthSum);
+            $pillSaving.textContent = vnd(good - bad);
+          }
+
+          function renderRow(x){
+            const isGood = x.Type === 'good';
+            const signClass = isGood ? 'amount-good' : 'amount-bad';
+            const badgeClass = isGood ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
+            const icon = isGood ? 'fa-thumbs-up' : 'fa-thumbs-down';
+            const date = x.Date.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit' });
+
+            return `
+              <div class="list-group-item expense-row">
+                <div class="row align-items-center g-2">
+                  <div class="col-auto">
+                    <span class="rounded-circle icon-dot ${isGood?'good':'bad'}">
+                      <i class="fas ${icon}"></i>
+                    </span>
+                  </div>
+                  <div class="col">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <strong>${x.Category}</strong>
+                      <span class="badge ${badgeClass} rounded-pill ms-1">${isGood ? 'Tốt' : 'Xấu'}</span>
+                    </div>
+                    <div class="text-muted small">${x.Description || ''}</div>
+                  </div>
+                  <div class="col-auto text-end">
+                    <div class="${signClass} fw-bold">${vnd(x.Amount)}</div>
+                    <div class="text-muted small">${date}</div>
+                  </div>
+                </div>
+              </div>`;
+          }
+
+          function render(){
+            // filter
+            let items = raw.filter(x => (filter.type==='all' || x.Type===filter.type))
+                           .filter(x => inRange(x.Date, filter.range))
+                           .filter(x => !filter.category || x.Category===filter.category);
+
+            // sort
+            items.sort((a,b)=>{
+              if(filter.sort==='date_desc') return b.Date - a.Date;
+              if(filter.sort==='date_asc')  return a.Date - b.Date;
+              if(filter.sort==='amount_desc') return b.Amount - a.Amount;
+              if(filter.sort==='amount_asc')  return a.Amount - b.Amount;
+              return 0;
+            });
+
+            // render list
+            if(items.length===0){
+              $list.innerHTML = '';
+              $empty.classList.remove('d-none');
+              $listCount.textContent = '(0 mục)';
+            } else {
+              $empty.classList.add('d-none');
+              $list.innerHTML = items.map(renderRow).join('');
+              $listCount.textContent = `(${items.length} mục)`;
+            }
+
+            // update pills (dựa theo toàn bộ items đã lọc theo “thời gian”, cho cảm giác nhất quán)
+            calcPills(items);
+          }
+
+          // kick
+          render();
+        })();
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          // ====== helpers ======
+          const fmtVND = n => (isNaN(n) ? '0đ' : n.toLocaleString('vi-VN') + 'đ');
+          const parseNumber = v => Number(String(v).replace(/[^\d]/g,'') || 0);
+
+          const elMonthly = document.getElementById('monthlyTarget');
+          const elDaily   = document.getElementById('dailyLimit');
+
+          // khối tóm tắt (đã có sẵn id)
+          const boxSummary = document.getElementById('goalSummary');
+          const targetDisplay = document.getElementById('targetDisplay');
+          const limitDisplay  = document.getElementById('limitDisplay');
+          const progressDisplay = document.getElementById('progressDisplay');
+
+          // ====== UI phụ: 3 thẻ info nhỏ + vòng tiến độ (render ngay dưới form) ======
+          const form = document.getElementById('savingsGoalForm');
+          const extra = document.createElement('div');
+          extra.className = 'goal-grid';
+          extra.innerHTML = `
+            <div class="goal-card">
+              <h6>Gợi ý hạn mức/ngày</h6>
+              <div class="goal-hint">Dựa trên mục tiêu tháng và số ngày còn lại.</div>
+              <div class="mt-2"><span class="goal-chip" id="chipSuggest">0đ / ngày</span></div>
+            </div>
+            <div class="goal-card">
+              <h6>Ngày còn lại trong tháng</h6>
+              <div class="goal-hint" id="daysLeftText">—</div>
+            </div>
+            <div class="goal-card">
+              <h6>Xem trước tiến độ</h6>
+              <div class="goal-preview">
+                <div class="goal-ring" id="goalRing"><span>0%</span></div>
+                <div class="goal-hint">Tiến độ ước tính so với mục tiêu đặt ra.</div>
+              </div>
+            </div>
+          `;
+          form.after(extra);
+
+          const chipSuggest = document.getElementById('chipSuggest');
+          const goalRing    = document.getElementById('goalRing');
+          const daysLeftText= document.getElementById('daysLeftText');
+
+          // ====== logic tính toán UI (thuần FE/demo) ======
+          function getDaysInMonth(date=new Date()){
+            return new Date(date.getFullYear(), date.getMonth()+1, 0).getDate();
+          }
+          function getTodayIndex(date=new Date()){ return date.getDate(); }
+
+          function calc(){
+            const monthTarget = parseNumber(elMonthly.value);
+            const dayLimit    = parseNumber(elDaily.value);
+
+            // ngày/tháng
+            const daysInMonth = getDaysInMonth();
+            const dayIdx = getTodayIndex();
+            const daysLeft = Math.max(0, daysInMonth - dayIdx + 1);
+            daysLeftText.textContent = `${daysLeft} ngày`;
+
+            // gợi ý hạn mức/ngày: nếu người dùng chưa nhập dailyLimit → đề xuất = (mục tiêu / số ngày còn lại)
+            const suggested = monthTarget > 0 && daysLeft > 0 ? Math.max(0, Math.round(monthTarget / daysLeft)) : 0;
+            if(!dayLimit){ chipSuggest.textContent = fmtVND(suggested) + ' / ngày'; }
+            else{ chipSuggest.textContent = fmtVND(dayLimit) + ' / ngày'; }
+
+            // tiến độ ước tính (demo): giả sử đã đi được tỉ lệ ngày trong tháng và giữ dưới hạn mức → % = min( (ngày đã qua/daysInMonth)*100, 100 )
+            const percent = Math.min(100, Math.round((dayIdx/daysInMonth)*100));
+            goalRing.style.setProperty('--deg', (percent/100*360)+'deg');
+            goalRing.querySelector('span').textContent = percent + '%';
+
+            // tóm tắt
+            targetDisplay.textContent = fmtVND(monthTarget);
+            limitDisplay.textContent  = fmtVND(dayLimit || suggested);
+            progressDisplay.textContent = percent + '%';
+            boxSummary.style.display = 'block';
+          }
+
+          // ====== auto-format tiền khi blur (chỉ hiển thị – giá trị thật vẫn là số) ======
+          function attachMoneyMask(input){
+            input.addEventListener('input', ()=> {
+              // đừng format trong lúc gõ để không nhảy caret; chỉ tính toán preview
+              calc();
+            });
+            input.addEventListener('blur', ()=> {
+              const n = parseNumber(input.value);
+              input.value = n ? n : '';
+              calc();
+            });
+          }
+          attachMoneyMask(elMonthly);
+          attachMoneyMask(elDaily);
+
+          // ====== khởi tạo từ window.savingsGoalData hoặc localStorage (demo) ======
+          const savedLocal = JSON.parse(localStorage.getItem('minibit-goal')||'{}');
+          if(savedLocal.monthlyTarget) elMonthly.value = savedLocal.monthlyTarget;
+          if(savedLocal.dailyLimit)    elDaily.value   = savedLocal.dailyLimit;
+
+          if(window.savingsGoalData){
+            if(!elMonthly.value && window.savingsGoalData.MonthlyTarget) elMonthly.value = window.savingsGoalData.MonthlyTarget;
+            if(!elDaily.value   && window.savingsGoalData.DailyLimit)    elDaily.value   = window.savingsGoalData.DailyLimit;
+          }
+
+          calc();
+
+          // ====== chặn submit thật – chỉ UI; lưu tạm và hiển thị toast ======
+          form.addEventListener('submit', (e)=>{
+            e.preventDefault();
+            const monthTarget = parseNumber(elMonthly.value);
+            const dayLimit    = parseNumber(elDaily.value);
+            localStorage.setItem('minibit-goal', JSON.stringify({monthlyTarget: monthTarget, dailyLimit: dayLimit}));
+
+            // mini feedback
+            const btn = form.querySelector('button[type="submit"]');
+            const old = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-check me-2"></i>Đã lưu';
+            setTimeout(()=>{ btn.disabled = false; btn.innerHTML = old; }, 1200);
+
+            calc();
+          });
+        });
+    </script>
+
+            <script>
+                (function () {
+                  const isPremium = !!window.isPremium;               // từ server
+                  const rows = Array.isArray(window.expensesData) ? window.expensesData : [];
+                  const goal  = window.savingsGoalData || {MonthlyTarget:0, DailyLimit:0};
+
+                  // Gate Premium UI (nếu BE chưa render sẵn)
+                  const promo = document.getElementById('premiumPromo');
+                  const content = document.getElementById('premiumContent');
+                  const unlock = document.getElementById('unlockPremiumBtn');
+                  if (isPremium) { promo?.classList.add('d-none'); content?.style.setProperty('display','block'); }
+                  unlock?.addEventListener('click', ()=>{ promo?.classList.add('d-none'); content?.style.setProperty('display','block'); });
+
+                  // Helper: money format
+                  const f = n => (n||0).toLocaleString('vi-VN')+'đ';
+                  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                  const endOfMonth   = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0);
+                  document.getElementById('analyticsRangeLabel')?.innerText =
+                    `Tháng ${startOfMonth.getMonth()+1}/${startOfMonth.getFullYear()}`;
+
+                  // Filter tháng này
+                  const monthRows = rows.filter(r => {
+                    const d = new Date(r.date || r.Date);
+                    return d >= startOfMonth && d <= endOfMonth;
+                  });
+
+                  // Tổng theo danh mục/thời gian
+                  const byCategory = {};
+                  const byDay = {};
+                  let totalMonth = 0, badCount = 0, badAmount = 0;
+
+                  monthRows.forEach(r=>{
+                    const amt = +r.amount || +r.Amount || 0;
+                    const cat = (r.category || r.Category || 'Khác').trim();
+                    const type= (r.type || r.Type || '').toString().toLowerCase();
+
+                    byCategory[cat] = (byCategory[cat]||0) + amt;
+                    const d = new Date(r.date || r.Date).getDate();
+                    byDay[d] = (byDay[d]||0) + amt;
+
+                    totalMonth += amt;
+                    if (type === 'bad') { badCount++; badAmount += amt; }
+                  });
+
+                  // KPI cards
+                  document.getElementById('kpiMonthTotal')?.innerText = f(totalMonth);
+                  const daysInMonth = endOfMonth.getDate();
+                  const today = new Date().getDate();
+                  const avgDay = totalMonth / Math.max(1, today);
+                  document.getElementById('kpiAvgDay')?.innerText = f(Math.round(avgDay));
+                  document.getElementById('kpiBadRate')?.innerText =
+                    Math.round((badAmount/Math.max(1,totalMonth))*100) + '%';
+                  document.getElementById('kpiBadCount')?.innerText = `${badCount} giao dịch`;
+
+                  // Top category
+                  const sortedCats = Object.entries(byCategory).sort((a,b)=>b[1]-a[1]);
+                  if (sortedCats[0]) {
+                    document.getElementById('kpiTopCat')?.innerText = sortedCats[0][0];
+                    document.getElementById('kpiTopCatAmt')?.innerText = f(sortedCats[0][1]);
+                  }
+
+                  // Hint theo DailyLimit
+                  const limit = +goal.DailyLimit || 0;
+                  if (limit > 0) {
+                    const hint = document.getElementById('kpiLimitHint');
+                    if (avgDay <= limit) {
+                      hint?.classList.add('text-success'); hint?.classList.remove('text-danger');
+                      hint && (hint.textContent = 'Trong giới hạn 🎯');
+                    } else {
+                      hint?.classList.add('text-danger'); hint?.classList.remove('text-success');
+                      hint && (hint.textContent = 'Vượt giới hạn ngày ⚠️');
+                    }
+                  }
+
+                  // Smart tip
+                  const tipBox = document.getElementById('tipSmart');
+                  if (sortedCats[0]) {
+                    const top = sortedCats[0];
+                    tipBox && (tipBox.textContent =
+                      `Danh mục “${top[0]}” đang chiếm tỷ trọng lớn. Hãy thử giảm 10% ở danh mục này, bạn sẽ tiết kiệm thêm ${f(Math.round(top[1]*0.1))}.`);
+                  }
+
+                  // Màu từ CSS variables
+                  const css = getComputedStyle(document.documentElement);
+                  const cPrimary = css.getPropertyValue('--minibit-primary').trim() || '#8b5cf6';
+                  const cSuccess = css.getPropertyValue('--minibit-success').trim() || '#22c55e';
+                  const cWarning = css.getPropertyValue('--minibit-warning').trim() || '#f59e0b';
+                  const cInfo    = css.getPropertyValue('--minibit-info').trim()    || '#3b82f6';
+
+                  // ---- Chart: by Category (doughnut) ----
+                  if (document.getElementById('chartByCategory')) {
+                    const labels = sortedCats.map(x=>x[0]);
+                    const data   = sortedCats.map(x=>x[1]);
+                    const palette = [cPrimary,cSuccess,cInfo,cWarning,'#60a5fa','#34d399','#f472b6','#fbbf24','#a78bfa','#10b981'];
+                    const colors = labels.map((_,i)=>palette[i%palette.length]);
+
+                    new Chart(document.getElementById('chartByCategory'),{
+                      type:'doughnut',
+                      data:{ labels, datasets:[{ data, backgroundColor:colors, borderWidth:0 }]},
+                      options:{
+                        plugins:{ legend:{ display:false }},
+                        cutout:'60%'
+                      }
+                    });
+
+                    // Legend tay cho đẹp
+                    const ul = document.getElementById('catLegend'); ul.innerHTML='';
+                    labels.forEach((lb,i)=>{
+                      const li = document.createElement('li');
+                      li.innerHTML = `<i style="background:${colors[i]}"></i> ${lb} - <strong>${f(data[i])}</strong>`;
+                      ul.appendChild(li);
+                    });
+                  }
+
+                  // ---- Chart: by Day (bar) ----
+                  if (document.getElementById('chartByDay')) {
+                    const days = Array.from({length: endOfMonth.getDate()}, (_,i)=>i+1);
+                    const vals = days.map(d=>byDay[d]||0);
+                    new Chart(document.getElementById('chartByDay'),{
+                      type:'bar',
+                      data:{ labels:days, datasets:[{ data:vals, backgroundColor:cInfo }]},
+                      options:{
+                        scales:{ x:{ grid:{display:false}}, y:{ grid:{color:'rgba(0,0,0,.06)'}}},
+                        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=>f(ctx.parsed.y) }}}
+                      }
+                    });
+                  }
+
+                  // ---- Chart: Trend 6 months (line) ----
+                  if (document.getElementById('chartTrend')) {
+                    const now = new Date();
+                    const months = [];
+                    const values = [];
+                    for (let i=5;i>=0;i--){
+                      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+                      const label = `${('0'+(d.getMonth()+1)).slice(-2)}/${d.getFullYear()}`;
+                      months.push(label);
+                      // tạm tính: lấy dữ liệu tháng tương ứng (nếu có), không thì 0
+                      const sum = rows.reduce((acc,r)=>{
+                        const dr = new Date(r.date || r.Date);
+                        if (dr.getFullYear()===d.getFullYear() && dr.getMonth()===d.getMonth()){
+                          acc += (+r.amount || +r.Amount || 0);
+                        }
+                        return acc;
+                      },0);
+                      values.push(sum);
+                    }
+                    new Chart(document.getElementById('chartTrend'),{
+                      type:'line',
+                      data:{ labels:months, datasets:[{ data:values, borderColor:cPrimary, backgroundColor:cPrimary+'22', tension:.3, fill:true, pointRadius:3 }]},
+                      options:{
+                        scales:{ x:{ grid:{display:false}}, y:{ grid:{color:'rgba(0,0,0,.06)'}}},
+                        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=>f(ctx.parsed.y) }}}
+                      }
+                    });
+
+                    // So sánh với tháng trước
+                    if (values.length>=2){
+                      const diff = values.at(-1) - values.at(-2);
+                      const el = document.getElementById('kpiMonthCompare');
+                      if (el){
+                        const up = diff>0;
+                        el.classList.toggle('text-danger', up);
+                        el.classList.toggle('text-success', !up);
+                        el.textContent = `So với tháng trước: ${up?'+':''}${f(diff)}`;
+                      }
+                    }
+                  }
+                })();
+            </script>
+
 }
+
+<link href="~/css/MinibitCharacter.css" rel="stylesheet" />

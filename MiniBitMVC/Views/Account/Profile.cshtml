@@ -1,0 +1,228 @@
+﻿@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+    Layout = "_Layout";
+}
+<link href="~/css/Auth.css" rel="stylesheet" />
+
+<div class="profile-wrap">
+    <div class="profile-grid">
+
+        <!-- 1) Thông tin cơ bản -->
+        <div class="profile-card">
+            <div class="card-header"><i class="fas fa-user-circle me-2"></i>Thông tin cơ bản</div>
+            <div class="card-body">
+                <div class="d-flex flex-column align-items-center text-center mb-3">
+                    <div class="pf-avatar-upload mb-3">
+                        <img id="pfAvatar" src="~/images/avatar-default.png" class="pf-avatar" alt="avatar">
+                        <label for="pfAvatarInput" class="upload-btn" title="Đổi ảnh"><i class="fas fa-camera"></i></label>
+                        <input id="pfAvatarInput" type="file" accept="image/*" class="d-none" />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Họ tên <span class="required">*</span></label>
+                        <input id="pfFullName" class="form-input" placeholder="VD: Nguyễn Minh An" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email (đăng nhập)</label>
+                        <input id="pfEmail" class="form-input" value="user@example.com" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Số điện thoại (tùy chọn)</label>
+                        <input id="pfPhone" class="form-input" placeholder="VD: 09xx xxx xxx" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ngày sinh</label>
+                        <input id="pfDob" type="date" class="form-input" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Giới tính</label>
+                        <select id="pfGender" class="form-input">
+                            <option value="">Không chọn</option>
+                            <option value="male">Nam</option>
+                            <option value="female">Nữ</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button id="btnSaveBasic" class="login-btn" style="width:auto;">Lưu thông tin cơ bản</button>
+                        <span id="toastBasic" class="alert alert-success py-1 px-2 ms-2 d-none">Đã lưu!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2) Thông tin tài chính (tùy chọn) + 3) Dữ liệu cá nhân -->
+        <div class="d-flex flex-column gap-4">
+
+            <!-- Tài chính -->
+            <div class="profile-card">
+                <div class="card-header"><i class="fas fa-wallet me-2"></i>Thông tin tài chính (tùy chọn)</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tiền tệ mặc định</label>
+                            <select id="pfCurrency" class="form-input">
+                                <option value="VND">VND (₫)</option>
+                                <option value="USD">USD ($)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Nguồn thu nhập chính</label>
+                            <select id="pfIncome" class="form-input">
+                                <option value="">Chưa chọn</option>
+                                <option value="salary">Lương</option>
+                                <option value="business">Kinh doanh</option>
+                                <option value="freelance">Tự do</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Phương thức chi tiêu chính</label>
+                            <select id="pfSpendMethod" class="form-input">
+                                <option value="">Chưa chọn</option>
+                                <option value="cash">Tiền mặt</option>
+                                <option value="card">Thẻ</option>
+                                <option value="ewallet">Ví điện tử</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button id="btnSaveFinance" class="login-btn" style="width:auto;">Lưu cài đặt tài chính</button>
+                            <span id="toastFinance" class="alert alert-success py-1 px-2 ms-2 d-none">Đã lưu!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dữ liệu cá nhân (insights) -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <i class="fas fa-database me-2"></i>Dữ liệu cá nhân
+                </div>
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat">
+                            <div class="stat-label">Tổng số giao dịch đã ghi</div>
+                            <div class="stat-value" id="statTotalTx">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Số tháng đã sử dụng</div>
+                            <div class="stat-value" id="statMonths">0</div>
+                        </div>
+                    </div>
+
+                    <div class="stat mt-3">
+                        <div class="stat-label">Mục tiêu đang theo dõi</div>
+                        <div class="stat-value" id="statCurrentGoal">—</div>
+                    </div>
+
+                    <div class="stat mt-3">
+                        <div class="stat-label">Ngân sách hiện tại</div>
+                        <div class="stat-value" id="statBudget">—</div>
+                    </div>
+
+                    <div class="insight-box mt-3" id="statInsight">
+                        <i class="fas fa-lightbulb me-2"></i> Đang tổng hợp dữ liệu…
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          const KEY='minibit_profile_v2';
+          const $ = id => document.getElementById(id);
+          const read = () => JSON.parse(localStorage.getItem(KEY) || '{}');
+          const write = (d) => localStorage.setItem(KEY, JSON.stringify(d||{}));
+          const toast = (el) => { el.classList.remove('d-none'); setTimeout(()=>el.classList.add('d-none'), 1200); };
+
+          function hydrate(){
+            const d = read();
+            if(d.avatar) $('pfAvatar').src = d.avatar;
+
+            $('pfFullName').value = d.fullname || '';
+            $('pfEmail').value    = d.email || $('pfEmail').value;   // readonly demo
+            $('pfPhone').value    = d.phone || '';
+            $('pfDob').value      = d.dob || '';
+            $('pfGender').value   = d.gender || '';
+
+            $('pfCurrency').value    = d.currency || 'VND';
+            $('pfIncome').value      = d.income || '';
+            $('pfSpendMethod').value = d.spendMethod || '';
+
+            $('pfTxCount').value = d.txCount ?? '';
+            $('pfMonths').value  = d.months ?? '';
+            $('pfGoal').value    = d.goal || '';
+            $('pfBudget').value  = d.budget || '';
+
+            updateInsight();
+          }
+
+          function updateInsight(){
+            const name = $('pfFullName').value.trim();
+            const goal = $('pfGoal').value.trim();
+            const budget = $('pfBudget').value.trim();
+            const months = parseInt($('pfMonths').value || '0', 10);
+
+            let tips = [];
+            if(name) tips.push(`Xin chào ${name}!`);
+            if(goal) tips.push(`Mục tiêu: ${goal}.`);
+            if(budget) tips.push(`Ngân sách hiện tại: ${budget}.`);
+            if(months >= 3) tips.push(`Bạn đã dùng ${months} tháng — đủ dữ liệu để gợi ý tối ưu chi tiêu 🎯`);
+            $('insightText').textContent = tips.length ? tips.join(' ') : 'Điền thông tin để MiniBit cá nhân hóa nhắc nhở & báo cáo cho bạn.';
+          }
+
+          document.addEventListener('DOMContentLoaded', ()=>{
+            hydrate();
+
+            // avatar upload preview (local)
+            $('pfAvatarInput').addEventListener('change', e=>{
+              const f = e.target.files?.[0]; if(!f) return;
+              const r = new FileReader();
+              r.onload = ()=>{ $('pfAvatar').src = r.result; const d=read(); d.avatar = r.result; write(d); };
+              r.readAsDataURL(f);
+            });
+
+            // save blocks
+            $('btnSaveBasic').addEventListener('click', ()=>{
+              const d = read();
+              d.fullname = $('pfFullName').value.trim();
+              d.phone    = $('pfPhone').value.trim();
+              d.dob      = $('pfDob').value;
+              d.gender   = $('pfGender').value;
+              write(d);
+              updateInsight();
+              toast($('toastBasic'));
+            });
+
+            $('btnSaveFinance').addEventListener('click', ()=>{
+              const d = read();
+              d.currency   = $('pfCurrency').value;
+              d.income     = $('pfIncome').value;
+              d.spendMethod= $('pfSpendMethod').value;
+              write(d);
+              toast($('toastFinance'));
+            });
+
+            $('btnSaveStats').addEventListener('click', ()=>{
+              const d = read();
+              d.txCount = $('pfTxCount').value ? parseInt($('pfTxCount').value,10) : null;
+              d.months  = $('pfMonths').value ? parseInt($('pfMonths').value,10) : null;
+              d.goal    = $('pfGoal').value.trim();
+              d.budget  = $('pfBudget').value.trim();
+              write(d);
+              updateInsight();
+              toast($('toastStats'));
+            });
+
+            // phản ứng realtime cho insight
+            ['pfFullName','pfGoal','pfBudget','pfMonths'].forEach(id=>{
+              $(id).addEventListener('input', updateInsight);
+            });
+          });
+        })();
+    </script>
+}

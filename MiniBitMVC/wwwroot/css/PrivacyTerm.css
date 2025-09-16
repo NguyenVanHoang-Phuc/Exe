@@ -1,0 +1,128 @@
+﻿
+:root {
+    --mb-purple: #6f42c1;
+    --mb-purple-100: rgba(111,66,193,.08);
+    --mb-shadow: 0 10px 40px rgba(111,66,193,.15);
+}
+
+.policy-hero {
+    background: radial-gradient(1100px 400px at -10% -10%, rgba(255,255,255,.25), transparent 50%), linear-gradient(90deg, #7b4ae2, #6f42c1 60%, #5b37a6);
+    color: #fff;
+}
+
+    .policy-hero .hero-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255,255,255,.15);
+        font-size: 1.25rem;
+        color: #fff;
+    }
+
+.policy-toc-card {
+    background: #fff;
+    box-shadow: var(--mb-shadow);
+}
+
+.policy-toc a {
+    display: block;
+    padding: .35rem 0;
+    border-left: 3px solid transparent;
+    color: #555;
+    text-decoration: none;
+    border-radius: .25rem;
+    transition: all .15s ease;
+}
+
+    .policy-toc a:hover {
+        color: #000;
+    }
+/* Active mục khi ScrollSpy set .active */
+#policyToc .active {
+    color: #000;
+    font-weight: 700;
+    border-left-color: var(--mb-purple);
+    padding-left: .5rem;
+}
+
+.policy-content {
+    background: #fff;
+    box-shadow: var(--mb-shadow);
+}
+
+    .policy-content .lead {
+        font-size: 1.05rem
+    }
+
+    .policy-content h3.anchor {
+        position: relative;
+        scroll-margin-top: 90px; /* tránh che bởi navbar */
+    }
+
+        .policy-content h3.anchor a {
+            opacity: 0;
+            text-decoration: none;
+            margin-left: .35rem;
+            font-size: .9rem;
+        }
+
+        .policy-content h3.anchor:hover a {
+            opacity: 1;
+        }
+
+.policy-callout {
+    border: 1px solid var(--mb-purple-100);
+    background: linear-gradient(0deg, rgba(111,66,193,.06), rgba(111,66,193,.03));
+    border-radius: .75rem;
+    padding: .75rem .9rem;
+    margin-top: 1rem;
+}
+
+    .policy-callout.info {
+        border-color: rgba(13,110,253,.2);
+    }
+
+.back-to-top {
+    width: 44px;
+    height: 44px;
+    position: fixed;
+    right: 20px;
+    bottom: 24px;
+    display: none;
+    z-index: 1080;
+}
+
+    .back-to-top.show {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    body {
+        color: #e8e8e8;
+        background: #0f0f12;
+    }
+
+    .policy-toc-card, .policy-content {
+        background: #16161a;
+        color: #e8e8e8;
+    }
+
+    .policy-toc a {
+        color: #b9b9b9;
+    }
+
+    #policyToc .active {
+        color: #fff;
+    }
+
+    .policy-callout {
+        background: rgba(111,66,193,.18);
+        border-color: rgba(111,66,193,.25);
+    }
+
+    .policy-hero .hero-icon {
+        background: rgba(255,255,255,.2);
+    }
+}

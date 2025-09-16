@@ -1,0 +1,88 @@
+﻿@{
+    ViewData["Title"] = "Đăng Nhập";
+    Layout = null;
+}
+
+<link href="~/css/Auth.css" rel="stylesheet" />
+
+<div class="login-container">
+    <!-- Brand Section -->
+    <div class="brand-section">
+        <div class="brand-logo">
+            <img src="~/images/LogoMiniBit.png" alt="MINIBIT Logo" />
+        </div>
+        <h1 class="brand-title">Quản lý ví- Cực easy</h1>
+    </div>
+
+    <!-- Login Section -->
+    <div class="login-section">
+        <div class="login-form-container">
+            <h2 class="login-title">Đăng Nhập</h2>
+
+            @if (!string.IsNullOrEmpty(ViewBag.Message))
+            {
+                <div class="alert alert-success text-center">@ViewBag.Message</div>
+            }
+            @if (!string.IsNullOrEmpty(ViewBag.Error))
+            {
+                <div class="alert alert-danger text-center">@ViewBag.Error</div>
+            }
+
+            <form asp-action="Login" method="post" novalidate>
+                @Html.AntiForgeryToken()
+
+                <div class="form-group">
+                    <label class="form-label" for="Email">
+                        <span class="required">*</span> Email
+                    </label>
+                    <input id="Email" name="Email" type="email" class="form-input"
+                           placeholder="Nhập Email của bạn" required />
+                    <span class="text-danger small" ></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="Password">
+                        <span class="required">*</span> Mật khẩu
+                    </label>
+                    <input id="Password" name="Password" type="password" class="form-input"
+                           placeholder="Nhập Mật khẩu" required />
+                    <span class="text-danger small"></span>
+                </div>
+
+                <div class="form-row-between">
+                    <label class="checkbox">
+                        <input id="RememberMe" name="RememberMe" type="checkbox" />
+                        <span>Ghi nhớ mật khẩu</span>
+                    </label>
+
+                    <a class="link-muted" href="@Url.Action("ForgotPassword", "Auth")">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" class="login-btn">Đăng Nhập</button>
+
+                @if (!string.IsNullOrEmpty(ViewBag.Error))
+                {
+                    <div class="text-danger text-center mt-2">@ViewBag.Error</div>
+                }
+            </form>
+
+            <div class="divider"><span>HOẶC</span></div>
+
+            <!-- Google Login Button -->
+            <form asp-action="GoogleLogin" asp-controller="Auth" method="post" class="mb-4">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="oauth-btn google">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google icon" />
+                    <span>Đăng nhập với Google</span>
+                </button>
+            </form>
+
+            <div class="register-link">
+                Bạn chưa có tài khoản?
+                <a href="@Url.Action("Signup", "Auth")">Đăng kí</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
