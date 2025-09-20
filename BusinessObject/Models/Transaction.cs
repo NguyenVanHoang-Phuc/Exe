@@ -15,6 +15,8 @@ public partial class Transaction
 
     public DateTime TransactionDate { get; set; }
 
+    public string? TransactionType { get; set; }
+
     public string? Description { get; set; }
 
     public DateTime CreatedAt { get; set; }

@@ -113,41 +113,43 @@
             <!-- Recent Expenses -->
             <div class="card minibit-card">
                 <div class="card-header">
-                    <h5 class="mb-0">Chi tiêu gần đây</h5>
+                    <h5 class="mb-0">Giao dịch gần đây</h5>
                 </div>
                 <div class="card-body">
-                    <div id="recentExpenses">
-                        @if (!Model.Expenses.Any())
+                    <div id="recentTransactions">
+                        @if (!Model.Transactions.Any())
                         {
                             <div class="text-center py-5">
                                 <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">Chưa có chi tiêu nào được ghi nhận</p>
+                                <p class="text-muted">Chưa có giao dịch nào được ghi nhận</p>
                             </div>
                         }
                         else
                         {
-                            @foreach (var expense in Model.Expenses.OrderByDescending(e => e.Date).Take(5))
+                            @foreach (var transaction in Model.Transactions
+                                                    .OrderByDescending(t => t.TransactionDate)
+                                                    .Take(5))
                             {
-                                <div class="expense-item">
+                                <div class="transaction-item mb-3">
                                     <div class="d-flex align-items-center">
-                                        <div class="expense-icon me-3">
-                                            @if (expense.Type == ExpenseModels.ExpenseType.Good)
+                                        <div class="transaction-icon me-3">
+                                            @* @if (transaction.Type == TransactionType.Good)
                                             {
                                                 <i class="fas fa-check-circle text-success"></i>
                                             }
                                             else
                                             {
                                                 <i class="fas fa-times-circle text-danger"></i>
-                                            }
+                                            } *@
                                         </div>
                                         <div class="flex-grow-1">
-                                            <h6 class="mb-1">@expense.Category</h6>
-                                            <p class="mb-0 text-muted small">@expense.Description</p>
+                                            <h6 class="mb-1">@transaction.Category</h6>
+                                            <p class="mb-0 text-muted small">@transaction.Description</p>
                                         </div>
                                         <div class="text-end">
-                                            <strong>@expense.Amount.ToString("N0")đ</strong>
+                                            <strong>@transaction.Amount.ToString("N0")đ</strong>
                                             <br>
-                                            <small class="text-muted">@expense.Date.ToString("dd/MM")</small>
+                                            <small class="text-muted">@transaction.TransactionDate.ToString("dd/MM")</small>
                                         </div>
                                     </div>
                                 </div>
@@ -199,6 +201,15 @@
                         </div>
 
                         <div class="ms-auto">
+                            <!-- Form upload CSV/XLSX -->
+                            <form id="importForm" method="post" enctype="multipart/form-data" action="/Home/ImportTransactions">
+                                <input type="file" id="fileInput" name="file" accept=".csv,.xlsx"
+                                       style="display:none" onchange="document.getElementById('importForm').submit()">
+                                <button type="button" class="btn btn-outline-success" onclick="document.getElementById('fileInput').click()">
+                                    <i class="fas fa-file-import me-2"></i>Nhập CSV/XLSX
+                                </button>
+                            </form>
+
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
                                 <i class="fas fa-plus me-2"></i>Thêm chi tiêu
                             </button>
@@ -230,24 +241,40 @@
             </div>
 
             <!-- Danh sách chi tiêu -->
+            @{
+                // Lấy ngày từ query string nếu có, nếu không dùng ngày hôm nay
+                var selectedDate = DateTime.Today;
+                var dateQuery = Context.Request.Query["date"];
+                if (!string.IsNullOrEmpty(dateQuery))
+                {
+                    DateTime.TryParse(dateQuery, out selectedDate);
+                }
+            }
+
+            <!-- Danh sách chi tiêu -->
             <div class="card minibit-card">
                 <div class="card-header d-flex align-items-center justify-content-between">
                     <h5 class="mb-0"><i class="fas fa-wallet me-2"></i>Danh sách chi tiêu</h5>
-                    <small class="text-muted" id="listCount">(0 mục)</small>
+                    <div>
+                        <input type="date" id="filterDate" class="form-control form-control-sm"
+                               value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
                 </div>
                 <div class="card-body p-0">
-                    <div id="expenseList" class="list-group list-group-flush">
-                        <!-- JS sẽ render các hàng từ window.expensesData -->
-                    </div>
-
-                    <!-- Empty state -->
-                    <div id="expenseEmpty" class="text-center py-5 d-none">
-                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                        <p class="text-muted mb-3">Chưa có chi tiêu nào phù hợp bộ lọc.</p>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-                            <i class="fas fa-plus me-2"></i>Thêm chi tiêu đầu tiên
-                        </button>
-                    </div>
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Mô tả</th>
+                                <th>Danh mục</th>
+                                <th>Loại</th>
+                                <th class="text-end">Số tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTableBody">
+                            @* Nội dung sẽ được Ajax render *@
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -293,7 +320,6 @@
             </div>
         </div>
 
-        <!-- Analytics Tab -->
         <!-- Analytics Tab -->
         <div class="tab-pane fade" id="analytics" role="tabpanel">
             <div class="card minibit-card">
@@ -459,7 +485,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script>
         // Initialize data from server
-        window.expensesData = @Html.Raw(Json.Serialize(Model.Expenses));
+        window.expensesData = @Html.Raw(Json.Serialize(Model.Transactions));
         window.savingsGoalData = @Html.Raw(Json.Serialize(Model.SavingsGoal));
         window.isPremium = @Html.Raw(Json.Serialize(Model.IsPremium));
     </script>
@@ -944,6 +970,44 @@
                     }
                   }
                 })();
+            </script>
+
+            <script>
+                        function renderTransactions(data) {
+                    const tbody = document.getElementById('transactionTableBody');
+                    tbody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = `<tr>
+                            <td colspan="5" class="text-center text-muted py-3">
+                                Không có giao dịch nào trong ngày ${document.getElementById('filterDate').value}
+                            </td>
+                        </tr>`;
+                    } else {
+                        data.forEach(t => {
+                            tbody.innerHTML += `<tr>
+                                <td>${new Date(t.transactionDate).toLocaleDateString()}</td>
+                                <td>${t.description}</td>
+                                <td>${t.category}</td>
+                                <td>${t.transactionType || ''}</td>
+                                <td class="text-end">${t.amount.toLocaleString()}₫</td>
+                            </tr>`;
+                        });
+                    }
+                }
+
+                async function loadTransactions(date) {
+                    const response = await fetch(`/Home/GetTransactionsByDate?date=${date}`);
+                    const data = await response.json();
+                    renderTransactions(data);
+                }
+
+                document.getElementById('filterDate').addEventListener('change', function () {
+                    loadTransactions(this.value);
+                });
+
+                // Load mặc định hôm nay khi page load
+                loadTransactions(document.getElementById('filterDate').value);
             </script>
 
 }

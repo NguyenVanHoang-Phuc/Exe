@@ -1,33 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BusinessObject.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace MiniBitMVC.Models
 {
     public class ExpenseModels
     {
-        public class Expense
-        {
-            public int Id { get; set; }
-
-            [Required]
-            [Range(1, double.MaxValue, ErrorMessage = "Số tiền phải lớn hơn 0")]
-            public decimal Amount { get; set; }
-
-            [Required]
-            public string Category { get; set; }
-
-            public string Description { get; set; }
-
-            [Required]
-            public ExpenseType Type { get; set; }
-
-            public DateTime Date { get; set; } = DateTime.Now;
-        }
-
-        public enum ExpenseType
-        {
-            Good = 1,
-            Bad = 2
-        }
 
         public class SavingsGoal
         {
@@ -40,7 +17,7 @@ namespace MiniBitMVC.Models
 
         public class DashboardViewModel
         {
-            public List<Expense> Expenses { get; set; } = new List<Expense>();
+            public List<Transaction> Transactions { get; set; } = new List<Transaction>();
             public SavingsGoal SavingsGoal { get; set; } = new SavingsGoal();
             public bool IsPremium { get; set; }
             public decimal TodayTotal { get; set; }
