@@ -31,7 +31,19 @@
     @RenderSection("PageStyles", required: false)
 </head>
 <body>
-    <!-- Spinner End -->
+    @{
+    var signedIn  = User?.Identity?.IsAuthenticated ?? false;
+    var userName  = User?.Identity?.Name ?? "Tài khoản";
+
+    // Premium theo Role/Claim (không cần DI)
+    var isPremium =
+        (User?.IsInRole("Premium") ?? false) ||
+        (User?.HasClaim("is_premium","true") ?? false) ||
+        (User?.HasClaim("IsPremium","true") ?? false);
+
+    // Số thông báo chưa đọc (controller có thể set ViewBag.UnreadCount; mặc định 0)
+    var unread = (int?)ViewBag.UnreadCount ?? 0;
+}
     <!-- Header Start -->
     <header class="minibit-header">
         <div class="container-fluid p-0">
@@ -61,53 +73,92 @@
                     </ul>
 
                     <div class="d-flex align-items-center gap-3">
-                        <!-- Notifications (bọc đúng .dropdown) -->
-                        <div class="dropdown">
-                            <button class="notification-bell position-relative dropdown-toggle" id="notificationBell" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-bell"></i>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge">0</span>
-                                <span class="visually-hidden">Thông báo</span>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificationBell" id="notificationDropdown" style="min-width: 18rem;">
-                                <div class="dropdown-header border-bottom py-2 px-3">
-                                    <h6 class="mb-0">Thông báo</h6>
-                                </div>
-                                <div class="notification-list" id="notificationList">
-                                    <div class="dropdown-item-text text-center text-muted py-3">
-                                        Không có thông báo mới
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- User Menu -->
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user me-1"></i>Tài khoản
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Cài đặt</a></li>
-                                <li>
-                                    <a class="dropdown-item"
-                                       href='@Url.Action("FAQ", "Home", new { tab = "faq" })#pane-faq'>
-                                        <i class="fas fa-question-circle me-2"></i>Hỗ trợ
-                                    </a>
-                                </li>
-
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
-                            </ul>
-                        </div>
-
-                        <!-- Premium Button -->
-                        <button class="btn btn-warning text-dark"
-                                data-bs-toggle="modal"
-                                data-bs-target="#premiumModal">
-                            <i class="fas fa-crown me-2"></i>
-                            <span id="premiumText">Nâng cấp Premium</span>
-                            <small class="d-block">29k/tháng</small>
-                        </button>
+    @if (signedIn)
+    {
+        <!-- Notifications -->
+        <div class="dropdown">
+            <button class="notification-bell position-relative dropdown-toggle" id="notificationBell"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-bell"></i>
+                <!-- Hiện badge cả khi = 0 -->
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      id="notificationBadge">@unread</span>
+                <span class="visually-hidden">Thông báo</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificationBell" id="notificationDropdown" style="min-width: 18rem;">
+                <div class="dropdown-header border-bottom py-2 px-3">
+                    <h6 class="mb-0">Thông báo</h6>
+                </div>
+                <div class="notification-list" id="notificationList">
+                    <div class="dropdown-item-text text-center text-muted py-3">
+                        @(unread > 0 ? "Bạn có thông báo chưa đọc" : "Không có thông báo mới")
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Menu -->
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user me-1"></i>@userName
+                @if (isPremium)
+                {
+                    <span class="badge bg-warning text-dark ms-2">
+                        <i class="fas fa-crown me-1"></i>Premium
+                    </span>
+                }
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Cài đặt</a></li>
+                <li>
+                    <a class="dropdown-item"
+                       href='@Url.Action("FAQ","Home", new { tab = "faq" })#pane-faq'>
+                        <i class="fas fa-question-circle me-2"></i>Hỗ trợ
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <!-- Khuyến nghị: Logout dùng POST -->
+                    <form method="post" action='@Url.Action("Logout","Account")' class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button class="dropdown-item" type="submit">
+                            <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Premium -->
+        @if (!isPremium)
+        {
+            <button class="btn btn-warning text-dark"
+                    data-bs-toggle="modal"
+                    data-bs-target="#premiumModal">
+                <i class="fas fa-crown me-2"></i>
+                <span id="premiumText">Nâng cấp Premium</span>
+                <small class="d-block">29k/tháng</small>
+            </button>
+        }
+        else
+        {
+            <a class="btn btn-warning text-dark disabled" tabindex="-1" aria-disabled="true">
+                <i class="fas fa-crown me-2"></i> Premium
+            </a>
+        }
+    }
+    else
+    {
+        <!-- CHƯA ĐĂNG NHẬP: chỉ Login / Register -->
+        <a class="btn btn-outline-primary" href='@Url.Action("Login","Account")'>
+            <i class="fas fa-right-to-bracket me-1"></i> Đăng nhập
+        </a>
+        <a class="btn btn-primary" href='@Url.Action("SignUp","Account")'>
+            <i class="fas fa-user-plus me-1"></i> Đăng ký
+        </a>
+    }
+</div>
+
                 </div>
             </nav>
 
