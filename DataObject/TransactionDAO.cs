@@ -20,6 +20,7 @@ namespace DataObject
         public async Task<List<Transaction>> GetTransactionsByUserIdAsync(int userId)
         {
             return await _context.Transactions
+                                 .Include(t => t.Category)
                                  .Where(t => t.UserId == userId)
                                  .ToListAsync();
         }
