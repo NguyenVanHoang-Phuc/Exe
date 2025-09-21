@@ -143,12 +143,14 @@ namespace MiniBitMVC.Controllers
         }
 
 
-
         [HttpPost]
         public async Task<IActionResult> ImportTransactions(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("Chưa chọn file.");
+            {
+                TempData["Error"] = "Chưa chọn file.";
+                return RedirectToAction("Index");
+            }
 
             var transactions = new List<Transaction>();
             string ext = Path.GetExtension(file.FileName).ToLower();
@@ -160,46 +162,80 @@ namespace MiniBitMVC.Controllers
                 return string.IsNullOrWhiteSpace(clean) ? "0" : clean;
             }
 
+            bool TryParseDate(string input, out DateTime date)
+            {
+                string[] formats = { "dd/MM/yyyy HH:mm", "dd/MM/yyyy" };
+                return DateTime.TryParseExact(input.Trim(), formats,
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+            }
+
+            // ================= XLSX =================
             if (ext == ".xlsx")
             {
                 using var stream = new MemoryStream();
                 await file.CopyToAsync(stream);
-                using var workbook = new XLWorkbook(stream);
+                using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
                 var worksheet = workbook.Worksheets.First();
 
                 bool headerFound = false;
+                var colIndex = new Dictionary<string, int>();
+
                 foreach (var row in worksheet.RowsUsed())
                 {
+                    var rowTexts = row.Cells().Select(c => c.GetString().Replace("\n", " ").Trim()).ToList();
+                    var joined = string.Join(" | ", rowTexts);
+                    Console.WriteLine("[XLSX ROW] " + joined);
+
+                    // tìm header
                     if (!headerFound)
                     {
-                        var headerText = string.Join(" | ",
-                            row.Cells().Select(c => c.GetString().Replace("\n", " ").Trim().ToLower()));
-                        Console.WriteLine("[XLSX HEADER] " + headerText);
-
-                        if (headerText.Contains("transaction date"))
+                        if (rowTexts.Any(t => t.ToLower().Contains("transaction date")) ||
+                            rowTexts.Any(t => t.ToLower().Contains("ngày giao")))
                         {
                             headerFound = true;
                             Console.WriteLine("Header FOUND (XLSX)!");
+
+                            for (int i = 0; i < rowTexts.Count; i++)
+                            {
+                                var text = rowTexts[i].ToLower();
+                                if (text.Contains("transaction date") || text.Contains("ngày giao")) colIndex["date"] = i + 1;
+                                else if (text.Contains("debit") || text.Contains("phát sinh n")) colIndex["debit"] = i + 1;
+                                else if (text.Contains("credit") || text.Contains("phát sinh có")) colIndex["credit"] = i + 1;
+                                else if (text.Contains("details") || text.Contains("nội dung")) colIndex["details"] = i + 1;
+                            }
+
+                            Console.WriteLine("Cột map:");
+                            foreach (var kv in colIndex)
+                                Console.WriteLine($" - {kv.Key} = {kv.Value}");
+
+                            continue;
                         }
-                        continue;
+                        else continue;
                     }
 
                     try
                     {
-                        var dateStr = row.Cell(3).GetString().Trim();
-                        if (!DateTime.TryParse(dateStr, out var date)) continue;
+                        if (!colIndex.ContainsKey("date")) continue;
 
-                        decimal.TryParse(NormalizeNumber(row.Cell(5).GetString()), out var debit);
-                        decimal.TryParse(NormalizeNumber(row.Cell(6).GetString()), out var credit);
-                        var details = row.Cell(7).GetString();
+                        var dateStr = row.Cell(colIndex["date"]).GetString().Trim();
+                        if (!TryParseDate(dateStr, out var date))
+                        {
+                            Console.WriteLine($"[SKIP] Không parse được ngày: {dateStr}");
+                            continue;
+                        }
+
+                        decimal.TryParse(NormalizeNumber(row.Cell(colIndex["debit"]).GetString()), out var debit);
+                        decimal.TryParse(NormalizeNumber(row.Cell(colIndex["credit"]).GetString()), out var credit);
+                        var details = colIndex.ContainsKey("details") ? row.Cell(colIndex["details"]).GetString() : "";
+
+                        if (details.ToLower().Contains("tổng phát sinh")) continue;
 
                         var amount = credit - debit;
                         Console.WriteLine($"[XLSX] Date={date:yyyy-MM-dd}, Debit={debit}, Credit={credit}, Amount={amount}, Desc={details}");
 
-                        if (amount == 0) continue;
-
                         transactions.Add(new Transaction
                         {
+                            UserId = 1,
                             TransactionDate = date,
                             Description = details,
                             Amount = amount
@@ -211,76 +247,145 @@ namespace MiniBitMVC.Controllers
                     }
                 }
             }
+
+            // ================= CSV =================
             else if (ext == ".csv")
             {
                 using var reader = new StreamReader(file.OpenReadStream());
                 string? line;
                 bool headerFound = false;
+                int dateIdx = -1, debitIdx = -1, creditIdx = -1, detailsIdx = -1;
 
                 while ((line = reader.ReadLine()) != null)
                 {
+                    var cols = line.Split(',');
+                    var headerLine = line.Replace("\n", " ").ToLower();
+
                     if (!headerFound)
                     {
-                        var headerLine = line.Replace("\n", " ").ToLower();
-                        Console.WriteLine("[CSV HEADER] " + headerLine);
-
-                        if (headerLine.Contains("transaction date"))
+                        if (headerLine.Contains("transaction date") || headerLine.Contains("ngày giao"))
                         {
                             headerFound = true;
                             Console.WriteLine("Header FOUND (CSV)!");
+
+                            for (int i = 0; i < cols.Length; i++)
+                            {
+                                var text = cols[i].ToLower();
+                                if (text.Contains("transaction date") || text.Contains("ngày giao")) dateIdx = i;
+                                else if (text.Contains("debit") || text.Contains("phát sinh n")) debitIdx = i;
+                                else if (text.Contains("credit") || text.Contains("phát sinh có")) creditIdx = i;
+                                else if (text.Contains("details") || text.Contains("nội dung")) detailsIdx = i;
+                            }
+
+                            continue;
                         }
                         continue;
                     }
 
-                    var cols = line.Split(',');
-                    if (cols.Length < 7) continue;
-
-                    if (!DateTime.TryParse(cols[2], out var date)) continue;
-
-                    decimal.TryParse(NormalizeNumber(cols[4]), out var debit);
-                    decimal.TryParse(NormalizeNumber(cols[5]), out var credit);
-                    var details = cols[6];
-
-                    var amount = credit - debit;
-                    Console.WriteLine($"[CSV] Date={date:yyyy-MM-dd}, Debit={debit}, Credit={credit}, Amount={amount}, Desc={details}");
-
-                    if (amount == 0) continue;
-
-                    transactions.Add(new Transaction
+                    try
                     {
-                        TransactionDate = date,
-                        Description = details,
-                        Amount = amount
-                    });
+                        if (dateIdx == -1) continue;
+
+                        if (!TryParseDate(cols[dateIdx], out var date))
+                        {
+                            Console.WriteLine($"[SKIP] Không parse được ngày: {cols[dateIdx]}");
+                            continue;
+                        }
+
+                        decimal.TryParse(NormalizeNumber(cols[debitIdx]), out var debit);
+                        decimal.TryParse(NormalizeNumber(cols[creditIdx]), out var credit);
+                        var details = detailsIdx >= 0 ? cols[detailsIdx] : "";
+
+                        if (details.ToLower().Contains("tổng phát sinh")) continue;
+
+                        var amount = credit - debit;
+                        Console.WriteLine($"[CSV] Date={date:yyyy-MM-dd}, Debit={debit}, Credit={credit}, Amount={amount}, Desc={details}");
+
+                        transactions.Add(new Transaction
+                        {
+                            UserId = 1,
+                            TransactionDate = date,
+                            Description = details,
+                            Amount = amount
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CSV] Lỗi dòng: {ex.Message}");
+                    }
                 }
             }
 
-            return Ok(new { count = transactions.Count });
+            Console.WriteLine($"Total transactions parsed: {transactions.Count}");
+            foreach (Transaction s in transactions)
+            {
+                Console.WriteLine($" - {s.TransactionDate:dd/MM/yyyy} | {s.Description} | {s.Amount}");
+            }
+
+            await _transactionService.AddListTransactionsAsync(transactions);
+
+            TempData["Success"] = $"Đã import {transactions.Count} giao dịch!";
+            return RedirectToAction("Index");
         }
 
 
-
-
-
-
-
-
         [HttpGet]
-        public async Task<IActionResult> GetTransactionsByDate(DateTime date)
+        public async Task<IActionResult> GetTransactions(string type, string date, string week, string month, string from, string to)
         {
             var transactions = await _transactionService.GetTransactionsByUserIdAsync(1);
-            var filtered = transactions
-                .Where(t => t.TransactionDate.Date == date.Date)
-                .Select(t => new
-                {
-                    t.TransactionDate,
-                    t.Description,
-                    t.Category,
-                    t.TransactionType,
-                    t.Amount
-                }).ToList();
 
-            return Json(filtered);
+            if (type == "day" && DateTime.TryParse(date, out var d))
+            {
+                transactions = transactions.Where(t => t.TransactionDate.Date == d.Date).ToList();
+            }
+            else if (type == "week" && !string.IsNullOrEmpty(week))
+            {
+                // week dạng "2025-W38"
+                var parts = week.Split("-W");
+                if (parts.Length == 2 && int.TryParse(parts[0], out int year) && int.TryParse(parts[1], out int weekNum))
+                {
+                    // Tính ngày đầu tuần theo chuẩn ISO (thứ 2 là đầu tuần)
+                    var jan1 = new DateTime(year, 1, 1);
+                    int daysOffset = DayOfWeek.Thursday - jan1.DayOfWeek;
+
+                    var firstThursday = jan1.AddDays(daysOffset);
+                    var cal = System.Globalization.CultureInfo.CurrentCulture.Calendar;
+                    int firstWeek = cal.GetWeekOfYear(firstThursday,
+                        System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+
+                    int weekNumAdjusted = weekNum;
+                    if (firstWeek <= 1) weekNumAdjusted -= 1;
+
+                    var result = firstThursday.AddDays(weekNumAdjusted * 7);
+                    var startOfWeek = result.AddDays(-3); // Monday
+                    var endOfWeek = startOfWeek.AddDays(7);
+
+                    transactions = transactions
+                        .Where(t => t.TransactionDate >= startOfWeek && t.TransactionDate < endOfWeek)
+                        .ToList();
+                }
+            }
+            else if (type == "month" && !string.IsNullOrEmpty(month))
+            {
+                // month dạng "2025-09"
+                if (DateTime.TryParse(month + "-01", out var monthDate))
+                {
+                    var startOfMonth = new DateTime(monthDate.Year, monthDate.Month, 1);
+                    var endOfMonth = startOfMonth.AddMonths(1);
+
+                    transactions = transactions
+                        .Where(t => t.TransactionDate >= startOfMonth && t.TransactionDate < endOfMonth)
+                        .ToList();
+                }
+            }
+            else if (type == "range" && DateTime.TryParse(from, out var f) && DateTime.TryParse(to, out var t))
+            {
+                transactions = transactions
+                    .Where(x => x.TransactionDate.Date >= f.Date && x.TransactionDate.Date <= t.Date)
+                    .ToList();
+            }
+
+            return Json(transactions);
         }
 
     }

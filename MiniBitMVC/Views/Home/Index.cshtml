@@ -15,6 +15,23 @@
     </div>
 </div>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+
 <!-- Notifications -->
 <div class="container mt-3" id="notificationsContainer">
     @if (Model.Notifications.Any())
@@ -160,129 +177,99 @@
             </div>
         </div>
 
-        <!-- Expenses Tab -->
-        <div class="tab-pane fade" id="expenses" role="tabpanel">
-
-            <!-- Toolbar lọc & hành động -->
-            <div class="card minibit-card mb-4">
-                <div class="card-body">
-                    <div class="expense-toolbar d-flex flex-wrap gap-2 align-items-center">
-                        <div class="btn-group" role="group" aria-label="type">
-                            <button class="btn btn-light chip active" data-type="all"><i class="fas fa-list-ul me-1"></i>Tất cả</button>
-                            <button class="btn btn-light chip" data-type="good"><i class="fas fa-thumbs-up me-1"></i>Tốt</button>
-                            <button class="btn btn-light chip" data-type="bad"><i class="fas fa-thumbs-down me-1"></i>Xấu</button>
-                        </div>
-
-                        <div class="vr mx-2 d-none d-md-block"></div>
-
-                        <div class="d-flex flex-wrap gap-2">
-                            <select class="form-select form-select-sm filter-select" id="filterRange">
-                                <option value="month">Tháng này</option>
-                                <option value="last30">30 ngày qua</option>
-                                <option value="week">Tuần này</option>
-                                <option value="custom">Tùy chỉnh…</option>
-                            </select>
-                            <select class="form-select form-select-sm filter-select" id="filterCategory">
-                                <option value="">Danh mục (tất cả)</option>
-                                <option>Ăn uống</option>
-                                <option>Di chuyển</option>
-                                <option>Mua sắm</option>
-                                <option>Giải trí</option>
-                                <option>Học tập</option>
-                                <option>Sức khỏe</option>
-                                <option>Khác</option>
-                            </select>
-                            <select class="form-select form-select-sm filter-select" id="filterSort">
-                                <option value="date_desc">Mới nhất</option>
-                                <option value="date_asc">Cũ nhất</option>
-                                <option value="amount_desc">Số tiền ↓</option>
-                                <option value="amount_asc">Số tiền ↑</option>
-                            </select>
-                        </div>
-
-                        <div class="ms-auto">
-                            <!-- Form upload CSV/XLSX -->
-                            <form id="importForm" method="post" enctype="multipart/form-data" action="/Home/ImportTransactions">
-                                <input type="file" id="fileInput" name="file" accept=".csv,.xlsx"
-                                       style="display:none" onchange="document.getElementById('importForm').submit()">
-                                <button type="button" class="btn btn-outline-success" onclick="document.getElementById('fileInput').click()">
-                                    <i class="fas fa-file-import me-2"></i>Nhập CSV/XLSX
-                                </button>
-                            </form>
-
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-                                <i class="fas fa-plus me-2"></i>Thêm chi tiêu
+        <div class="card minibit-card mb-4">
+            <div class="card-body">
+                <div class="expense-toolbar d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                    <div class="d-flex flex-wrap gap-2">
+                        <!-- Form upload CSV/XLSX -->
+                        <form id="importForm" method="post" enctype="multipart/form-data" action="/Home/ImportTransactions">
+                            <input type="file" id="fileInput" name="file" accept=".csv,.xlsx"
+                                   style="display:none" onchange="document.getElementById('importForm').submit()">
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-file-import me-1"></i>Nhập CSV/XLSX
                             </button>
-                        </div>
+                        </form>
                     </div>
+
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                        <i class="fas fa-plus me-1"></i>Thêm chi tiêu
+                    </button>
                 </div>
             </div>
-
-            <!-- 3 “pill” thống kê nhanh -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <div class="stat-pill">
-                        <div class="label"><i class="fas fa-calendar-day me-2"></i>Hôm nay</div>
-                        <div class="value text-primary" id="pillToday">0đ</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-pill">
-                        <div class="label"><i class="fas fa-calendar-alt me-2"></i>Tháng này</div>
-                        <div class="value text-success" id="pillMonth">0đ</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-pill">
-                        <div class="label"><i class="fas fa-piggy-bank me-2"></i>Tiết kiệm dự kiến</div>
-                        <div class="value text-warning" id="pillSaving">0đ</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Danh sách chi tiêu -->
-            @{
-                // Lấy ngày từ query string nếu có, nếu không dùng ngày hôm nay
-                var selectedDate = DateTime.Today;
-                var dateQuery = Context.Request.Query["date"];
-                if (!string.IsNullOrEmpty(dateQuery))
-                {
-                    DateTime.TryParse(dateQuery, out selectedDate);
-                }
-            }
-
-            <!-- Danh sách chi tiêu -->
-            <div class="card minibit-card">
-                <div class="card-header d-flex align-items-center justify-content-between">
-                    <h5 class="mb-0"><i class="fas fa-wallet me-2"></i>Danh sách chi tiêu</h5>
-                    <div>
-                        <input type="date" id="filterDate" class="form-control form-control-sm"
-                               value="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Ngày</th>
-                                <th>Mô tả</th>
-                                <th>Danh mục</th>
-                                <th>Loại</th>
-                                <th class="text-end">Số tiền</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionTableBody">
-                            @* Nội dung sẽ được Ajax render *@
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Nút thêm nổi (mobile) -->
-            <button class="btn btn-primary sticky-add-btn d-md-none" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-                <i class="fas fa-plus"></i>
-            </button>
         </div>
+
+        <!-- 3 pill thống kê -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="stat-pill">
+                    <div class="label"><i class="fas fa-calendar-day me-2"></i>Hôm nay</div>
+                    <div class="value text-primary" id="pillToday">0đ</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-pill">
+                    <div class="label"><i class="fas fa-calendar-alt me-2"></i>Tháng này</div>
+                    <div class="value text-success" id="pillMonth">0đ</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-pill">
+                    <div class="label"><i class="fas fa-piggy-bank me-2"></i>Tiết kiệm dự kiến</div>
+                    <div class="value text-warning" id="pillSaving">0đ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách chi tiêu -->
+        <div class="card minibit-card">
+            <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                <h5 class="mb-0"><i class="fas fa-wallet me-2"></i>Danh sách chi tiêu</h5>
+
+                <!-- Filter -->
+                <div class="d-flex flex-wrap gap-2">
+                    <select id="filterType" class="form-select form-select-sm">
+                        <option value="day">Ngày</option>
+                        <option value="week">Tuần</option>
+                        <option value="month">Tháng</option>
+                        <option value="range">Khoảng</option>
+                    </select>
+
+                    <!-- Filter inputs -->
+                    <input type="date" id="filterDate" class="form-control form-control-sm"
+                           value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <input type="week" id="filterWeek" class="form-control form-control-sm d-none" />
+                    <input type="month" id="filterMonth" class="form-control form-control-sm d-none" />
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="date" id="filterFrom" class="form-control form-control-sm d-none" />
+                        <span id="rangeSep" class="d-none">-</span>
+                        <input type="date" id="filterTo" class="form-control form-control-sm d-none" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ngày</th>
+                            <th>Mô tả</th>
+                            <th>Danh mục</th>
+                            <th>Loại</th>
+                            <th class="text-end">Số tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                        @* Nội dung sẽ được Ajax render *@
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Floating button (mobile) -->
+        <button class="btn btn-primary sticky-add-btn d-md-none" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+            <i class="fas fa-plus"></i>
+        </button>
+
 
 
         <!-- Goals Tab -->
@@ -972,43 +959,111 @@
                 })();
             </script>
 
-            <script>
-                        function renderTransactions(data) {
-                    const tbody = document.getElementById('transactionTableBody');
-                    tbody.innerHTML = '';
 
-                    if (data.length === 0) {
-                        tbody.innerHTML = `<tr>
-                            <td colspan="5" class="text-center text-muted py-3">
-                                Không có giao dịch nào trong ngày ${document.getElementById('filterDate').value}
-                            </td>
-                        </tr>`;
-                    } else {
-                        data.forEach(t => {
-                            tbody.innerHTML += `<tr>
-                                <td>${new Date(t.transactionDate).toLocaleDateString()}</td>
-                                <td>${t.description}</td>
-                                <td>${t.category}</td>
-                                <td>${t.transactionType || ''}</td>
-                                <td class="text-end">${t.amount.toLocaleString()}₫</td>
-                            </tr>`;
-                        });
+            @* filter date và render dữ liệu *@
+            <script>
+                function toggleFilterInputs() {
+                    const type = document.getElementById('filterType').value;
+
+                    // Ẩn hết
+                    document.getElementById('filterDate').classList.add('d-none');
+                    document.getElementById('filterWeek').classList.add('d-none');
+                    document.getElementById('filterMonth').classList.add('d-none');
+                    document.getElementById('filterFrom').classList.add('d-none');
+                    document.getElementById('filterTo').classList.add('d-none');
+                    document.getElementById('rangeSep').classList.add('d-none');
+
+                    // Hiện theo loại
+                    if (type === "day") {
+                        document.getElementById('filterDate').classList.remove('d-none');
+                    } else if (type === "week") {
+                        document.getElementById('filterWeek').classList.remove('d-none');
+                    } else if (type === "month") {
+                        document.getElementById('filterMonth').classList.remove('d-none');
+                    } else if (type === "range") {
+                        document.getElementById('filterFrom').classList.remove('d-none');
+                        document.getElementById('filterTo').classList.remove('d-none');
+                        document.getElementById('rangeSep').classList.remove('d-none');
                     }
                 }
 
-                async function loadTransactions(date) {
-                    const response = await fetch(`/Home/GetTransactionsByDate?date=${date}`);
-                    const data = await response.json();
-                    renderTransactions(data);
+                async function loadTransactions() {
+                    const type = document.getElementById('filterType').value;
+                    let url = "/Home/GetTransactions?";
+
+                    if (type === "day") {
+                        const date = document.getElementById('filterDate').value;
+                        url += `type=day&date=${date}`;
+                    }
+                    else if (type === "week") {
+                        const week = document.getElementById('filterWeek').value; // ví dụ "2025-W38"
+                        url += `type=week&week=${week}`;
+                    }
+                    else if (type === "month") {
+                        const month = document.getElementById('filterMonth').value; // ví dụ "2025-09"
+                        url += `type=month&month=${month}`;
+                    }
+                    else if (type === "range") {
+                        const from = document.getElementById('filterFrom').value;
+                        const to = document.getElementById('filterTo').value;
+                        url += `type=range&from=${from}&to=${to}`;
+                    }
+
+                    try {
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error("Lỗi tải dữ liệu");
+                        const data = await response.json();
+                        renderTransactions(data);
+                    } catch (err) {
+                        console.error(err);
+                    }
                 }
 
-                document.getElementById('filterDate').addEventListener('change', function () {
-                    loadTransactions(this.value);
+                function renderTransactions(transactions) {
+                    const tbody = document.getElementById("transactionTableBody");
+                    tbody.innerHTML = "";
+
+                    if (!transactions || transactions.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="text-center">Không có dữ liệu</td></tr>`;
+                        return;
+                    }
+
+                    transactions.forEach(t => {
+                        const tr = document.createElement("tr");
+
+                        tr.innerHTML = `
+                            <td>${t.transactionDate ? new Date(t.transactionDate).toLocaleDateString() : ""}</td>
+                            <td>${t.description ?? ""}</td>
+                            <td>${t.category ? t.category.name ?? t.category.Name : ""}</td>
+                            <td>${t.transactionType}</td>
+                            <td>${t.amount?.toLocaleString() ?? 0} VND</td>
+                        `;
+
+                        tbody.appendChild(tr);
+                    });
+                }
+
+
+                // Event change filter type
+                document.getElementById('filterType').addEventListener('change', () => {
+                    toggleFilterInputs();
+                    loadTransactions();
                 });
 
-                // Load mặc định hôm nay khi page load
-                loadTransactions(document.getElementById('filterDate').value);
+                // Event khi chọn input filter (day/week/month/range)
+                document.querySelectorAll('#filterDate, #filterWeek, #filterMonth, #filterFrom, #filterTo')
+                    .forEach(el => {
+                        el.addEventListener('change', () => loadTransactions());
+                    });
+
+                // Chạy khi load trang
+                window.addEventListener('DOMContentLoaded', () => {
+                    toggleFilterInputs();
+                    loadTransactions();
+                });
             </script>
+
+
 
 }
 
