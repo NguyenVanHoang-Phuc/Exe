@@ -8,5 +8,7 @@ namespace Service
 {
     public interface IUserSubscriptionService
     {
+        Task<bool> HasActiveAsync(int userId);
+        Task UpsertActivateAsync(int userId, int planId, int months);
     }
 }
