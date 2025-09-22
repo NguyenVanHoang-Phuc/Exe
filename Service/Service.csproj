@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="GroqNet" Version="1.0.1" />
+    <PackageReference Include="OpenAI" Version="2.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BusinessObject\BusinessObject.csproj" />
     <ProjectReference Include="..\DataObject\DataObject.csproj" />
     <ProjectReference Include="..\Repositories\Repositories.csproj" />

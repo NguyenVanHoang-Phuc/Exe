@@ -1,4 +1,4 @@
-using BusinessObject.Models;
+﻿using BusinessObject.Models;
 using DataObject;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
@@ -51,6 +51,9 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserSubscriptionService, UserSubscriptionService>();
+
+builder.Services.AddScoped<IAIRepository, AIRepository>();
+builder.Services.AddScoped<IAIService, AIService>();
 
 var app = builder.Build();
 

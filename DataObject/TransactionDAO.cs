@@ -22,6 +22,7 @@ namespace DataObject
             return await _context.Transactions
                                  .Include(t => t.Category)
                                  .Where(t => t.UserId == userId)
+                                 .OrderByDescending(t => t.TransactionDate)
                                  .ToListAsync();
         }
 
