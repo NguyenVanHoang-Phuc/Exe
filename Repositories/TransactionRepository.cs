@@ -41,5 +41,25 @@ namespace Repositories
         {
             await _transactionDAO.AddListTransactionsAsync(transactions);
         }
+
+        public async Task<decimal> GetMonthlySpendingByUserIdAsync(int userId)
+        {
+            return await _transactionDAO.GetMonthlySpendingByUserIdAsync(userId);
+        }
+
+        public async Task<decimal> GetTodaySpendingByUserIdAsync(int userId)
+        {
+            return await _transactionDAO.GetTodaySpendingByUserIdAsync(userId);
+        }
+
+        public async Task<decimal> GetMonthlySavingByUserIdAsync(int userId)
+        {
+            return await _transactionDAO.GetMonthlySavingByUserIdAsync(userId);
+        }
+
+        public async Task<Transaction> GetTransactionAsyncByTransactionId(int transactionId)
+        {
+            return await _transactionDAO.GetTransactionAsyncByTransactionId(transactionId);
+        }
     }
 }

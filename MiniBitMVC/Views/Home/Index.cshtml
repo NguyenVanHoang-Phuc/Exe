@@ -132,49 +132,90 @@
                 <div class="card-header">
                     <h5 class="mb-0">Giao dịch gần đây</h5>
                 </div>
-                <div class="card-body">
-                    <div id="recentTransactions">
-                        @if (!Model.Transactions.Any())
-                        {
-                            <div class="text-center py-5">
-                                <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">Chưa có giao dịch nào được ghi nhận</p>
-                            </div>
-                        }
-                        else
-                        {
-                            @foreach (var transaction in Model.Transactions
-                                                    .OrderByDescending(t => t.TransactionDate)
-                                                    .Take(5))
-                            {
-                                <div class="transaction-item mb-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="transaction-icon me-3">
-                                            @* @if (transaction.Type == TransactionType.Good)
-                                            {
-                                                <i class="fas fa-check-circle text-success"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="fas fa-times-circle text-danger"></i>
-                                            } *@
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1">@transaction.Category</h6>
-                                            <p class="mb-0 text-muted small">@transaction.Description</p>
-                                        </div>
-                                        <div class="text-end">
-                                            <strong>@transaction.Amount.ToString("N0")đ</strong>
-                                            <br>
-                                            <small class="text-muted">@transaction.TransactionDate.ToString("dd/MM")</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        }
-                    </div>
+                <div class="card-body p-0">
+                    @if (!Model.Transactions.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Chưa có giao dịch nào được ghi nhận</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Mô tả</th>
+                                    <th>Danh mục</th>
+                                    <th>Loại</th>
+                                    <th class="text-end">Số tiền</th>
+                                    <th>Đánh giá</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var transaction in Model.Transactions
+                                                            .OrderByDescending(t => t.TransactionDate)
+                                                            .Take(5))
+                                {
+                                    <tr>
+                                        <td class="date-cell" data-date="@transaction.TransactionDate.ToString("yyyy-MM-dd")">
+                                            @transaction.TransactionDate.ToString("dd/MM/yyyy")
+                                        </td>
+                                        <td class="description-cell">@transaction.Description</td>
+                                        <td>
+                                            <select class="form-select form-select-sm category-select" data-id="@transaction.TransactionId">
+                                                @foreach (var category in Model.Categories) 
+                                                {
+                                                    if (transaction.CategoryId == category.CategoryId)
+                                                    {
+                                                        <option value="@category.CategoryId" selected>@category.Name</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@category.CategoryId">@category.Name</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            @(transaction.Amount < 0 ? "Chi tiêu" : "Thu nhập")
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <span class="amount-value @(transaction.Amount < 0 ? "text-danger" : "text-success")">
+                                                @transaction.Amount.ToString("N0")đ
+                                            </span>
+                                        </td>   
+                                        <td class="text-center">
+                                            <span class="rating-icon" data-id="@transaction.TransactionId" data-rating="@transaction.TransactionType">
+                                                @* 3 trạng thái: null / good / bad *@
+                                                @if (transaction.TransactionType == "Good")
+                                                {
+                                                    <i class="fas fa-thumbs-up text-success"></i>
+                                                }
+                                                else if (transaction.TransactionType == "Bad")
+                                                {
+                                                    <i class="fas fa-thumbs-down text-danger"></i>
+                                                }
+                                                else if (transaction.TransactionType == null)
+                                                {
+                                                    <i class="fas fa-circle text-secondary"></i> @* màu xám *@
+                                                }
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-primary me-1 update-btn" data-id="@transaction.TransactionId">Update</button>
+                                            <button class="btn btn-sm btn-danger delete-btn" data-id="@transaction.TransactionId">Xóa</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
                 </div>
             </div>
+
         </div>
 
         <!-- Expenses Tab -->
@@ -206,19 +247,19 @@
                 <div class="col-md-4">
                     <div class="stat-pill">
                         <div class="label"><i class="fas fa-calendar-day me-2"></i>Hôm nay</div>
-                        <div class="value text-primary" id="pillToday">0đ</div>
+                        <div class="value text-primary" id="pillToday">@Model.TodayTotal.ToString("N0")đ</div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-pill">
                         <div class="label"><i class="fas fa-calendar-alt me-2"></i>Tháng này</div>
-                        <div class="value text-success" id="pillMonth">0đ</div>
+                        <div class="value text-success" id="pillMonth">@Model.MonthlyTotal.ToString("N0")đ</div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-pill">
                         <div class="label"><i class="fas fa-piggy-bank me-2"></i>Tiết kiệm dự kiến</div>
-                        <div class="value text-warning" id="pillSaving">0đ</div>
+                        <div class="value text-warning" id="pillSaving">@Model.MonthlySavings.ToString("N0")đ</div>
                     </div>
                 </div>
             </div>
@@ -257,6 +298,7 @@
                                 <th>Danh mục</th>
                                 <th>Loại</th>
                                 <th class="text-end">Số tiền</th>
+                                <th>Đánh giá</th>
                             </tr>
                         </thead>
                         <tbody id="transactionTableBody">
@@ -451,62 +493,61 @@
             </div>
         </div>
 
-<!-- Add Expense Modal -->
-<div class="modal fade" id="addExpenseModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Thêm chi tiêu mới</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addExpenseForm">
-                    <div class="mb-3">
-                        <label for="expenseAmount" class="form-label">Số tiền</label>
-                        <input type="number" class="form-control" id="expenseAmount" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="expenseCategory" class="form-label">Danh mục</label>
-                        <select class="form-select" id="expenseCategory" required>
-                            <option value="">Chọn danh mục</option>
-                            <option value="Ăn uống">Ăn uống</option>
-                            <option value="Di chuyển">Di chuyển</option>
-                            <option value="Mua sắm">Mua sắm</option>
-                            <option value="Giải trí">Giải trí</option>
-                            <option value="Học tập">Học tập</option>
-                            <option value="Sức khỏe">Sức khỏe</option>
-                            <option value="Khác">Khác</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="expenseDescription" class="form-label">Mô tả</label>
-                        <textarea class="form-control" id="expenseDescription" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Phân loại</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="expenseType" id="goodExpense" value="good" checked>
-                            <label class="btn btn-outline-success" for="goodExpense">
-                                <i class="fas fa-thumbs-up me-2"></i>Chi tiêu tốt
-                            </label>
-                            <input type="radio" class="btn-check" name="expenseType" id="badExpense" value="bad">
-                            <label class="btn btn-outline-danger" for="badExpense">
-                                <i class="fas fa-thumbs-down me-2"></i>Chi tiêu xấu
-                            </label>
+        <!-- Add Expense Modal -->
+        <div class="modal fade" id="addExpenseModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="addExpenseForm">
+                        <input type="hidden" id="transactionId" value=""> <!-- để biết là edit hay add -->
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalTitle">Thêm chi tiêu</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" onclick="addExpense()">Thêm chi tiêu</button>
+                        <div class="modal-body">
+                            <div class="mb-2">
+                                <label>Số tiền</label>
+                                <input type="number" class="form-control" id="expenseAmount" required>
+                            </div>
+                            <div class="mb-2">
+                                <label>Danh mục</label>
+                                <select class="form-select" id="expenseCategory" required>
+                                    @foreach (var cat in Model.Categories)
+                                    {
+                                        <option value="@cat.CategoryId">@cat.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label>Mô tả</label>
+                                <input type="text" class="form-control" id="expenseDescription">
+                            </div>
+                            <div class="mb-2">
+                                <label>Ngày</label>
+                                <input type="date" class="form-control" id="expenseDate" required>
+                            </div>
+                            <div class="mb-2">
+                                <label>Loại</label><br>
+                                <input type="radio" name="TransactionType" value="Good" checked> Good
+                                <input type="radio" name="TransactionType" value="Bad"> Bad
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary" id="modalSubmit">Thêm</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+
+
+
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    <script>
+                const categories = @Html.Raw(Json.Serialize(Model.Categories));
+                const userId = 1; // 👈 Tạm hardcode userId (sau này thay bằng login thực)
+    </script>
     <script>
         // Initialize data from server
         window.expensesData = @Html.Raw(Json.Serialize(Model.Transactions));
@@ -1068,12 +1109,44 @@
                     transactions.forEach(t => {
                         const tr = document.createElement("tr");
 
+                        let ratingIcon = "";
+                        if (t.transactionType === "Good") {
+                            ratingIcon = '<i class="fas fa-thumbs-up text-success"></i>';
+                        } else if (t.transactionType === "Bad") {
+                            ratingIcon = '<i class="fas fa-thumbs-down text-danger"></i>';
+                        } else {
+                            ratingIcon = '<i class="fas fa-circle text-secondary"></i>'; // null → tròn xám
+                        }
+
                         tr.innerHTML = `
-                            <td>${t.transactionDate ? new Date(t.transactionDate).toLocaleDateString() : ""}</td>
-                            <td>${t.description ?? ""}</td>
-                            <td>${t.category ? t.category.name ?? t.category.Name : ""}</td>
-                            <td>${t.transactionType}</td>
-                            <td>${t.amount?.toLocaleString() ?? 0} VND</td>
+                            <td class="date-cell" data-date="${t.transactionDate ? new Date(t.transactionDate).toISOString().split('T')[0] : ''}">
+                                ${t.transactionDate ? new Date(t.transactionDate).toLocaleDateString() : ""}
+                            </td>
+                            <td class="description-cell">${t.description ?? ""}</td>
+                            <td>
+                                <select class="form-select form-select-sm category-select" data-id="${t.transactionId}">
+                                    ${categories.map(c => `
+                                        <option value="${c.categoryId}" ${t.categoryId === c.categoryId ? "selected" : ""}>
+                                            ${c.name}
+                                        </option>
+                                    `).join("")}
+                                </select>
+                            </td>
+                            <td>${t.amount < 0 ? "Chi tiêu" : "Thu nhập"}</td>
+                            <td class="text-end amount-cell">
+                                <span class="amount-value ${t.amount < 0 ? "text-danger" : "text-success"}">
+                                    ${t.amount?.toLocaleString() ?? 0}đ
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="rating-icon" data-id="${t.transactionId}" data-type="${t.transactionType ?? ""}">
+                                    ${ratingIcon}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary me-1 update-btn" data-id="${t.transactionId}">Update</button>
+                                <button class="btn btn-sm btn-danger delete-btn" data-id="${t.transactionId}">Delete</button>
+                            </td>
                         `;
 
                         tbody.appendChild(tr);
@@ -1101,7 +1174,6 @@
             </script>
 
             <script>
-                const userId = 1; // 👈 Tạm hardcode userId (sau này thay bằng login thực)
 
                 document.getElementById("sendChatBtn").addEventListener("click", async () => {
                     const input = document.getElementById("chatInput");
@@ -1147,6 +1219,171 @@
                 });
             </script>
 
+            <script>
+                
+                document.addEventListener("change", async (e) => {
+                    if (e.target.classList.contains("category-select")) {
+                        const transactionId = parseInt(e.target.dataset.id);   // ép về int
+                        const newCategoryId = parseInt(e.target.value);
+
+                                        console.log("Sending update:", {
+                    transactionId: transactionId,
+                    categoryId: newCategoryId
+                });
+                        try {
+                            const response = await fetch("/Home/UpdateTransactionCategory", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    transactionId: transactionId,
+                                    categoryId: newCategoryId
+                                })
+                            });
+
+                            if (!response.ok) {
+                                throw new Error("Request lỗi " + response.status);
+                            }
+
+                            const result = await response.json();
+
+                            if (!result.success) {
+                                throw new Error("Lỗi cập nhật danh mục");
+                            }
+
+                            console.log(`Transaction ${transactionId} đã đổi sang category ${newCategoryId}`);
+
+                        } catch (err) {
+                            console.error(err);
+                            alert("Không thể cập nhật danh mục");
+                        }
+                    }
+                });
+            </script>
+
+            @* Toogle Icon Type *@
+            <script>
+
+                 document.addEventListener("click", async (e) => {
+                    const target = e.target;
+
+                    // ===== Rating toggle =====
+                    const span = target.closest(".rating-icon");
+                    if (span) {
+                        let type = span.dataset.type; // null / Good / Bad
+
+                        // Toggle logic: null → Good → Bad → Good ↔ Bad
+                        if (!type) type = "Good";
+                        else if (type === "Good") type = "Bad";
+                        else if (type === "Bad") type = "Good";
+
+                        // Update icon ngay lập tức
+                        span.dataset.type = type;
+                        span.innerHTML = type === "Good"
+                            ? '<i class="fas fa-thumbs-up text-success"></i>'
+                            : '<i class="fas fa-thumbs-down text-danger"></i>';
+
+                        // Gửi fetch POST lên server
+                        try {
+                            const res = await fetch("/Home/UpdateTransactionType", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    transactionId: parseInt(span.dataset.id),
+                                    transactionType: type
+                                })
+                            });
+                            const data = await res.json();
+                            if (!data.success) throw new Error(data.message || "Không thể cập nhật TransactionType");
+                        } catch (err) {
+                            console.error(err);
+                            alert(err.message);
+                        }
+                        return;
+                    }
+
+                    // ===== Update transaction =====
+                    if (target.classList.contains("update-btn")) {
+                        const row = target.closest("tr");
+                        const transactionId = target.dataset.id;
+                        const amountText = row.querySelector(".amount-cell .amount-value").textContent;
+                        const amount = parseFloat(amountText.replace("đ", "").replaceAll(",", ""));
+                        const description = row.querySelector(".description-cell").textContent;
+                        const categoryId = row.querySelector(".category-select").value;
+                        const date = row.querySelector(".date-cell").dataset.date;
+                        const type = row.querySelector(".rating-icon").dataset.type || "Good";
+
+                        // Điền vào modal
+                        document.getElementById("transactionId").value = transactionId;
+                        document.getElementById("expenseAmount").value = amount;
+                        document.getElementById("expenseDescription").value = description;
+                        document.getElementById("expenseCategory").value = categoryId;
+                        document.getElementById("expenseDate").value = date;
+                        document.querySelector(`input[name="TransactionType"][value="${type}"]`).checked = true;
+
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById("addExpenseModal")).show();
+                        return;
+                    }
+
+                    // ===== Delete transaction =====
+                    if (target.classList.contains("delete-btn")) {
+                        const transactionId = parseInt(target.dataset.id);
+                        if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
+
+                        try {
+                            const res = await fetch("/Home/DeleteTransaction", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ transactionId })
+                            });
+                            const data = await res.json();
+                            if (!data.success) throw new Error(data.message || "Xóa thất bại");
+                            target.closest("tr").remove();
+                            console.log(`Transaction ${transactionId} đã bị xóa`);
+                        } catch (err) {
+                            console.error(err);
+                            alert(err.message);
+                        }
+                        return;
+                    }
+                });
+
+                // ===== Thêm / Chỉnh sửa transaction =====
+                document.getElementById("addExpenseForm").addEventListener("submit", async (e)=>{
+                    e.preventDefault();
+
+                    const transactionId = document.getElementById("transactionId")?.value || null;
+                    const transaction = {
+                        TransactionId: transactionId ? parseInt(transactionId) : 0, // 0 => thêm mới
+                        Amount: Number(document.getElementById("expenseAmount").value),
+                        CategoryId: parseInt(document.getElementById("expenseCategory").value),
+                        Description: document.getElementById("expenseDescription").value,
+                        TransactionDate: document.getElementById("expenseDate").value,
+                        TransactionType: document.querySelector('input[name="TransactionType"]:checked').value
+                    };
+
+                    const url = transactionId ? "/Home/UpdateTransaction" : "/Home/AddTransaction";
+
+                    try {
+                        const res = await fetch(url, {
+                            method:"POST",
+                            headers:{"Content-Type":"application/json"},
+                            body: JSON.stringify(transaction)
+                        });
+                        const data = await res.json();
+                        if (!data.success) throw new Error(data.message || "Thất bại");
+
+                        bootstrap.Modal.getInstance(document.getElementById("addExpenseModal")).hide();
+                        e.target.reset();
+                        await loadTransactions(); // fetch lại bảng
+                    } catch (err) {
+                        console.error(err);
+                        alert(err.message);
+                    }
+                });
+
+
+
+            </script>
 }
 
 <link href="~/css/MinibitCharacter.css" rel="stylesheet" />

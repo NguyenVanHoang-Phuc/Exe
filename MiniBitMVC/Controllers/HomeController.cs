@@ -2,6 +2,7 @@
 using ClosedXML.Excel;
 using CsvHelper;
 using CsvHelper.Configuration;
+using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,21 +20,24 @@ namespace MiniBitMVC.Controllers
         private static SavingsGoal _savingsGoal = new SavingsGoal();
         private readonly ITransactionService _transactionService;
         private static bool _isPremium = false;
+        private readonly ICategoryService _categoryService;
 
-        public HomeController(ILogger<HomeController> logger, ITransactionService transactionService)
+        public HomeController(ILogger<HomeController> logger, ITransactionService transactionService, ICategoryService categoryService)
         {
             _logger = logger;
             _transactionService = transactionService;
+            _categoryService = categoryService;
         }
 
         // GET: Dashboard
         public async Task<IActionResult> Index()
         {
             var transactions = await _transactionService.GetTransactionsByUserIdAsync(1);
-
+            var categories = await _categoryService.GetByUserIdAsync(1);
             var model = new DashboardViewModel
             {
                 Transactions = transactions,
+                Categories = categories,
                 SavingsGoal = _savingsGoal,
                 IsPremium = _isPremium
             };
@@ -43,15 +47,11 @@ namespace MiniBitMVC.Controllers
             var currentMonth = DateTime.Now.Month;
             var currentYear = DateTime.Now.Year;
 
-            model.TodayTotal = transactions
-                .Where(t => t.TransactionDate.Date == today)
-                .Sum(t => t.Amount);
+            model.TodayTotal = await _transactionService.GetTodaySpendingByUserIdAsync(1);
 
-            model.MonthlyTotal = transactions
-                .Where(t => t.TransactionDate.Month == currentMonth && t.TransactionDate.Year == currentYear)
-                .Sum(t => t.Amount);
+            model.MonthlyTotal = await _transactionService.GetMonthlySpendingByUserIdAsync(1);
 
-            model.MonthlySavings = _savingsGoal.MonthlyTarget - model.MonthlyTotal;
+            model.MonthlySavings = await _transactionService.GetMonthlySavingByUserIdAsync(1);
 
             // Generate notifications
             model.Notifications = GenerateNotifications(transactions, model);
@@ -63,15 +63,63 @@ namespace MiniBitMVC.Controllers
         [HttpPost]
         public async Task<IActionResult> AddTransaction([FromBody] Transaction transaction)
         {
-            if (ModelState.IsValid)
+
+            transaction.UserId = 1; // giả lập userId
+            Console.WriteLine($"UserId: {transaction.UserId}");
+            Console.WriteLine($"Amount: {transaction.Amount}");
+            Console.WriteLine($"CategoryId: {transaction.CategoryId}");
+            Console.WriteLine($"Description: {transaction.Description}");
+            Console.WriteLine($"TransactionType: {transaction.TransactionType}");
+
+            transaction.TransactionDate = DateTime.Now;
+            await _transactionService.AddTransactionAsync(transaction);
+
+            return Json(new { success = true});
+        }
+
+        // POST: Delete Transaction
+        [HttpPost]
+        public async Task<IActionResult> DeleteTransaction([FromBody] DeleteTransactionRequest request)
+        {
+            try
             {
-                transaction.TransactionDate = DateTime.Now;
-                await _transactionService.AddTransactionAsync(transaction); // Lưu vào DB
+                int transactionId = request.TransactionId;
+                var transaction = await _transactionService.GetTransactionAsyncByTransactionId(transactionId);
+                if (transaction == null)
+                    return Json(new { success = false, message = "Không tìm thấy giao dịch!" });
 
-                return Json(new { success = true, message = "Giao dịch đã được thêm thành công!" });
+                await _transactionService.DeleteTransactionAsync(transaction);
+                return Json(new { success = true, message = "Đã xóa giao dịch!" });
             }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
 
-            return Json(new { success = false, message = "Dữ liệu không hợp lệ!" });
+        // POST: Update Transaction
+        [HttpPost]
+        public async Task<IActionResult> UpdateTransaction([FromBody] Transaction updatedTransaction)
+        {
+            if (updatedTransaction == null || updatedTransaction.TransactionId <= 0)
+                return Json(new { success = false, message = "Dữ liệu không hợp lệ!" });
+
+            var transaction = await _transactionService.GetTransactionAsyncByTransactionId(updatedTransaction.TransactionId);
+            if (transaction == null)
+                return Json(new { success = false, message = "Không tìm thấy giao dịch!" });
+
+            // Cập nhật các trường
+            transaction.Amount = updatedTransaction.Amount;
+            transaction.CategoryId = updatedTransaction.CategoryId;
+            transaction.Description = updatedTransaction.Description;
+            transaction.TransactionDate = updatedTransaction.TransactionDate == default
+                ? transaction.TransactionDate
+                : updatedTransaction.TransactionDate;
+            transaction.TransactionType = updatedTransaction.TransactionType;
+
+            await _transactionService.UpdateTransactionAsync(transaction);
+
+            return Json(new { success = true, message = "Cập nhật giao dịch thành công!" });
         }
 
         // POST: Save Savings Goal
@@ -386,6 +434,54 @@ namespace MiniBitMVC.Controllers
             }
 
             return Json(transactions);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateTransactionCategoryAsync([FromBody] UpdateCategoryRequest dto)
+        {
+            int transactionId = dto.TransactionId;
+            int categoryId = dto.CategoryId;
+
+            // Lấy transaction
+            Transaction transaction = await _transactionService.GetTransactionAsyncByTransactionId(transactionId);
+            if (transaction == null)
+            {
+                return Ok(new { success = false, message = $"Không tìm thấy transaction {transactionId}" });
+            }
+
+            // Lấy category
+            var category = await _categoryService.GetByIdAsync(categoryId);
+            if (category == null)
+            {
+                return Ok(new { success = false, message = $"Không tìm thấy category {categoryId}" });
+            }
+
+            // Kiểm tra rule user/global
+            if (category.UserId != null && category.UserId != transaction.UserId)
+            {
+                return Ok(new { success = false, message = "Category không thuộc user" });
+            }
+
+            // Update
+            transaction.CategoryId = categoryId;
+            await _transactionService.UpdateTransactionAsync(transaction);
+
+            return Ok(new { success = true, message = "Cập nhật thành công" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateTransactionType([FromBody] UpdateTransactionTypeRequest dto)
+        {
+            var transaction = await _transactionService.GetTransactionAsyncByTransactionId(dto.TransactionId);
+            if (transaction == null)
+                return Ok(new { success = false, message = "Không tìm thấy transaction" });
+
+            // Cập nhật TransactionType
+            transaction.TransactionType = dto.TransactionType;
+            await _transactionService.UpdateTransactionAsync(transaction);
+
+            return Ok(new { success = true, message = "Cập nhật thành công" });
         }
 
     }

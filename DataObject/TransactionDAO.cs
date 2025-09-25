@@ -49,5 +49,63 @@ namespace DataObject
             await _context.Transactions.AddRangeAsync(transactions);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<decimal> GetMonthlySpendingByUserIdAsync(int userId)
+        {
+            var now = DateTime.Now;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            return await _context.Transactions
+                .Where(t => t.UserId == userId &&
+                            t.TransactionDate >= startOfMonth &&
+                            t.TransactionDate <= endOfMonth &&
+                            t.Amount < 0) // chỉ chi tiêu
+                .SumAsync(t => (decimal?)(-t.Amount)) ?? 0; // đổi thành số dương
+        }
+
+        public async Task<decimal> GetTodaySpendingByUserIdAsync(int userId)
+        {
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            return await _context.Transactions
+                .Where(t => t.UserId == userId &&
+                            t.TransactionDate >= today &&
+                            t.TransactionDate < tomorrow &&
+                            t.Amount < 0) // chỉ chi tiêu
+                .SumAsync(t => (decimal?)(-t.Amount)) ?? 0; // đổi thành số dương
+        }
+
+        public async Task<decimal> GetMonthlySavingByUserIdAsync(int userId)
+        {
+            var now = DateTime.Now;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            var income = await _context.Transactions
+                .Where(t => t.UserId == userId &&
+                            t.TransactionDate >= startOfMonth &&
+                            t.TransactionDate <= endOfMonth &&
+                            t.Amount >= 0)
+                .SumAsync(t => (decimal?)t.Amount) ?? 0;
+
+            var expense = await _context.Transactions
+                .Where(t => t.UserId == userId &&
+                            t.TransactionDate >= startOfMonth &&
+                            t.TransactionDate <= endOfMonth &&
+                            t.Amount < 0)
+                .SumAsync(t => (decimal?)(-t.Amount)) ?? 0;
+
+            return income - expense;
+        }
+
+        public async Task<Transaction> GetTransactionAsyncByTransactionId(int transactionId)
+        {
+            return await _context.Transactions
+                                 .Include(t => t.Category) // nếu muốn lấy cả Category
+                                 .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+        }
+
     }
 }
