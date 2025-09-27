@@ -61,6 +61,9 @@ builder.Services.AddScoped<IUserSubscriptionService, UserSubscriptionService>();
 builder.Services.AddScoped<IAIRepository, AIRepository>();
 builder.Services.AddScoped<IAIService, AIService>();
 
+builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

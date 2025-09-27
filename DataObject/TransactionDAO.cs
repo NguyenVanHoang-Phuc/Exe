@@ -116,5 +116,12 @@ namespace DataObject
                 .SumAsync(t => (decimal?)t.Amount ?? 0);
         }
 
+        public async Task<List<Transaction>> GetTransactionsByUserInRangeAsync(int userId, DateTime start, DateTime end)
+        {
+            return await _context.Transactions
+                .Include(t => t.Category)
+                .Where(t => t.UserId == userId && t.TransactionDate >= start && t.TransactionDate <= end)
+                .ToListAsync();
+        }
     }
 }
