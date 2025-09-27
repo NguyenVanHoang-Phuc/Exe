@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Service
+namespace Repositories
 {
-    public interface IBudgetService
+    public interface IAnalyticsRepository
     {
-        Task<Budget?> GetBudgetByUserIdAsync(int userId);
+        Task<AnalyticsDto> GetMonthlyAnalyticsAsync(int userId, DateTime start, DateTime end);
     }
 }

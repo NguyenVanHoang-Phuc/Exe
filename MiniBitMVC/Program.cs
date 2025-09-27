@@ -1,13 +1,19 @@
-using BusinessObject.Models;
+﻿using BusinessObject.Models;
 using DataObject;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Service;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(x =>
+    {
+        x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        x.JsonSerializerOptions.WriteIndented = true;
+    });
 
 builder.Services.AddDbContext<FinanceAppDbContext>(options =>
     options.UseSqlServer(
@@ -51,6 +57,12 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserSubscriptionService, UserSubscriptionService>();
+
+builder.Services.AddScoped<IAIRepository, AIRepository>();
+builder.Services.AddScoped<IAIService, AIService>();
+
+builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 var app = builder.Build();
 

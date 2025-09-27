@@ -9,6 +9,8 @@ public partial class Budget
 
     public int UserId { get; set; }
 
+    public int GoalId { get; set; }
+
     public int Month { get; set; }
 
     public int Year { get; set; }
@@ -16,6 +18,8 @@ public partial class Budget
     public decimal AmountLimit { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public virtual Goal Goal { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
 }

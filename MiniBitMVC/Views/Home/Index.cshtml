@@ -132,143 +132,187 @@
                 <div class="card-header">
                     <h5 class="mb-0">Giao dịch gần đây</h5>
                 </div>
+                <div class="card-body p-0">
+                    @if (!Model.Transactions.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Chưa có giao dịch nào được ghi nhận</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Mô tả</th>
+                                    <th>Danh mục</th>
+                                    <th>Loại</th>
+                                    <th class="text-end">Số tiền</th>
+                                    <th>Đánh giá</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var transaction in Model.Transactions
+                                                            .OrderByDescending(t => t.TransactionDate)
+                                                            .Take(5))
+                                {
+                                    <tr>
+                                        <td class="date-cell" data-date="@transaction.TransactionDate.ToString("yyyy-MM-dd")">
+                                            @transaction.TransactionDate.ToString("dd/MM/yyyy")
+                                        </td>
+                                        <td class="description-cell">@transaction.Description</td>
+                                        <td>
+                                            <select class="form-select form-select-sm category-select" data-id="@transaction.TransactionId">
+                                                @foreach (var category in Model.Categories) 
+                                                {
+                                                    if (transaction.CategoryId == category.CategoryId)
+                                                    {
+                                                        <option value="@category.CategoryId" selected>@category.Name</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@category.CategoryId">@category.Name</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            @(transaction.Amount < 0 ? "Chi tiêu" : "Thu nhập")
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <span class="amount-value @(transaction.Amount < 0 ? "text-danger" : "text-success")">
+                                                @transaction.Amount.ToString("N0")đ
+                                            </span>
+                                        </td>   
+                                        <td class="text-center">
+                                            <span class="rating-icon" data-id="@transaction.TransactionId" data-rating="@transaction.TransactionType">
+                                                @* 3 trạng thái: null / good / bad *@
+                                                @if (transaction.TransactionType == "Good")
+                                                {
+                                                    <i class="fas fa-thumbs-up text-success"></i>
+                                                }
+                                                else if (transaction.TransactionType == "Bad")
+                                                {
+                                                    <i class="fas fa-thumbs-down text-danger"></i>
+                                                }
+                                                else if (transaction.TransactionType == null)
+                                                {
+                                                    <i class="fas fa-circle text-secondary"></i> @* màu xám *@
+                                                }
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-primary me-1 update-btn" data-id="@transaction.TransactionId">Update</button>
+                                            <button class="btn btn-sm btn-danger delete-btn" data-id="@transaction.TransactionId">Xóa</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Expenses Tab -->
+        <div class="tab-pane fade" id="expenses" role="tabpanel">
+            <!-- Import + Add -->
+            <div class="card minibit-card mb-4">
                 <div class="card-body">
-                    <div id="recentTransactions">
-                        @if (!Model.Transactions.Any())
-                        {
-                            <div class="text-center py-5">
-                                <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">Chưa có giao dịch nào được ghi nhận</p>
-                            </div>
-                        }
-                        else
-                        {
-                            @foreach (var transaction in Model.Transactions
-                                                    .OrderByDescending(t => t.TransactionDate)
-                                                    .Take(5))
-                            {
-                                <div class="transaction-item mb-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="transaction-icon me-3">
-                                            @* @if (transaction.Type == TransactionType.Good)
-                                            {
-                                                <i class="fas fa-check-circle text-success"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="fas fa-times-circle text-danger"></i>
-                                            } *@
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1">@transaction.Category</h6>
-                                            <p class="mb-0 text-muted small">@transaction.Description</p>
-                                        </div>
-                                        <div class="text-end">
-                                            <strong>@transaction.Amount.ToString("N0")đ</strong>
-                                            <br>
-                                            <small class="text-muted">@transaction.TransactionDate.ToString("dd/MM")</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        }
+                    <div class="expense-toolbar d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                        <div class="d-flex flex-wrap gap-2">
+                            <!-- Form upload CSV/XLSX -->
+                            <form id="importForm" method="post" enctype="multipart/form-data" action="/Home/ImportTransactions">
+                                <input type="file" id="fileInput" name="file" accept=".csv,.xlsx"
+                                       style="display:none" onchange="document.getElementById('importForm').submit()">
+                                <button type="button" class="btn btn-outline-success btn-sm"
+                                        onclick="document.getElementById('fileInput').click()">
+                                    <i class="fas fa-file-import me-1"></i>Nhập CSV/XLSX
+                                </button>
+                            </form>
+                        </div>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                            <i class="fas fa-plus me-1"></i>Thêm chi tiêu
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card minibit-card mb-4">
-            <div class="card-body">
-                <div class="expense-toolbar d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <!-- 3 pill thống kê -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-pill">
+                        <div class="label"><i class="fas fa-calendar-day me-2"></i>Hôm nay</div>
+                        <div class="value text-primary" id="pillToday">@Model.TodayTotal.ToString("N0")đ</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-pill">
+                        <div class="label"><i class="fas fa-calendar-alt me-2"></i>Tháng này</div>
+                        <div class="value text-success" id="pillMonth">@Model.MonthlyTotal.ToString("N0")đ</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-pill">
+                        <div class="label"><i class="fas fa-piggy-bank me-2"></i>Tiết kiệm dự kiến</div>
+                        <div class="value text-warning" id="pillSaving">@Model.MonthlySavings.ToString("N0")đ</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danh sách chi tiêu -->
+            <div class="card minibit-card">
+                <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                    <h5 class="mb-0"><i class="fas fa-wallet me-2"></i>Danh sách chi tiêu</h5>
+                    <!-- Filter -->
                     <div class="d-flex flex-wrap gap-2">
-                        <!-- Form upload CSV/XLSX -->
-                        <form id="importForm" method="post" enctype="multipart/form-data" action="/Home/ImportTransactions">
-                            <input type="file" id="fileInput" name="file" accept=".csv,.xlsx"
-                                   style="display:none" onchange="document.getElementById('importForm').submit()">
-                            <button type="button" class="btn btn-outline-success btn-sm" onclick="document.getElementById('fileInput').click()">
-                                <i class="fas fa-file-import me-1"></i>Nhập CSV/XLSX
-                            </button>
-                        </form>
-                    </div>
+                        <select id="filterType" class="form-select form-select-sm">
+                            <option value="day">Ngày</option>
+                            <option value="week">Tuần</option>
+                            <option value="month">Tháng</option>
+                            <option value="range">Khoảng</option>
+                        </select>
 
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-                        <i class="fas fa-plus me-1"></i>Thêm chi tiêu
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3 pill thống kê -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="stat-pill">
-                    <div class="label"><i class="fas fa-calendar-day me-2"></i>Hôm nay</div>
-                    <div class="value text-primary" id="pillToday">0đ</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-pill">
-                    <div class="label"><i class="fas fa-calendar-alt me-2"></i>Tháng này</div>
-                    <div class="value text-success" id="pillMonth">0đ</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-pill">
-                    <div class="label"><i class="fas fa-piggy-bank me-2"></i>Tiết kiệm dự kiến</div>
-                    <div class="value text-warning" id="pillSaving">0đ</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Danh sách chi tiêu -->
-        <div class="card minibit-card">
-            <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
-                <h5 class="mb-0"><i class="fas fa-wallet me-2"></i>Danh sách chi tiêu</h5>
-
-                <!-- Filter -->
-                <div class="d-flex flex-wrap gap-2">
-                    <select id="filterType" class="form-select form-select-sm">
-                        <option value="day">Ngày</option>
-                        <option value="week">Tuần</option>
-                        <option value="month">Tháng</option>
-                        <option value="range">Khoảng</option>
-                    </select>
-
-                    <!-- Filter inputs -->
-                    <input type="date" id="filterDate" class="form-control form-control-sm"
-                           value="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                    <input type="week" id="filterWeek" class="form-control form-control-sm d-none" />
-                    <input type="month" id="filterMonth" class="form-control form-control-sm d-none" />
-                    <div class="d-flex gap-2 align-items-center">
-                        <input type="date" id="filterFrom" class="form-control form-control-sm d-none" />
-                        <span id="rangeSep" class="d-none">-</span>
-                        <input type="date" id="filterTo" class="form-control form-control-sm d-none" />
+                        <input type="date" id="filterDate" class="form-control form-control-sm"
+                               value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <input type="week" id="filterWeek" class="form-control form-control-sm d-none" />
+                        <input type="month" id="filterMonth" class="form-control form-control-sm d-none" />
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="date" id="filterFrom" class="form-control form-control-sm d-none" />
+                            <span id="rangeSep" class="d-none">-</span>
+                            <input type="date" id="filterTo" class="form-control form-control-sm d-none" />
+                        </div>
                     </div>
                 </div>
+
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Mô tả</th>
+                                <th>Danh mục</th>
+                                <th>Loại</th>
+                                <th class="text-end">Số tiền</th>
+                                <th>Đánh giá</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTableBody">
+                            @* Nội dung sẽ được Ajax render *@
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Ngày</th>
-                            <th>Mô tả</th>
-                            <th>Danh mục</th>
-                            <th>Loại</th>
-                            <th class="text-end">Số tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactionTableBody">
-                        @* Nội dung sẽ được Ajax render *@
-                    </tbody>
-                </table>
-            </div>
+            <!-- Floating button (mobile) -->
+            <button class="btn btn-primary sticky-add-btn d-md-none" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
-
-        <!-- Floating button (mobile) -->
-        <button class="btn btn-primary sticky-add-btn d-md-none" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-            <i class="fas fa-plus"></i>
-        </button>
 
 
 
@@ -284,12 +328,22 @@
                     <form id="savingsGoalForm">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="monthlyTarget" class="form-label">Mục tiêu tiết kiệm tháng (đ)</label>
-                                <input type="number" class="form-control" id="monthlyTarget" value="@Model.SavingsGoal.MonthlyTarget" placeholder="Nhập số tiền muốn tiết kiệm">
+                                <label for="goalName" class="form-label">Tên mục tiêu</label>
+                                <input type="text" class="form-control" id="goalName"
+                                       placeholder="Ví dụ: Tiết kiệm mua laptop" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="dailyLimit" class="form-label">Giới hạn chi tiêu hàng ngày (đ)</label>
-                                <input type="number" class="form-control" id="dailyLimit" value="@Model.SavingsGoal.DailyLimit" placeholder="Nhập giới hạn chi tiêu mỗi ngày">
+                                <label for="targetAmount" class="form-label">Mục tiêu tiết kiệm tổng (đ)</label>
+                                <input type="number" class="form-control" id="targetAmount"
+                                       placeholder="Nhập số tiền muốn tiết kiệm" min="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="startDate" class="form-label">Bắt đầu từ</label>
+                                <input type="date" class="form-control" id="startDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="endDate" class="form-label">Kết thúc</label>
+                                <input type="date" class="form-control" id="endDate" required>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-3">Lưu mục tiêu</button>
@@ -297,15 +351,23 @@
 
                     <div class="mt-4" id="goalSummary" style="display: none;">
                         <div class="alert alert-info">
-                            <h6 class="alert-heading">Kế hoạch chi tiêu của bạn:</h6>
-                            <p class="mb-1">💰 Mục tiêu tiết kiệm: <strong id="targetDisplay"></strong></p>
-                            <p class="mb-1">📅 Chi tiêu tối đa mỗi ngày: <strong id="limitDisplay"></strong></p>
-                            <p class="mb-0">📊 Tiến độ tháng này: <strong id="progressDisplay"></strong></p>
+                            <h6 class="alert-heading">🎯 Mục tiêu đang active:</h6>
+                            <p class="mb-1">Tên: <strong id="activeName"></strong></p>
+                            <p class="mb-1">💰 Số tiền: <strong id="activeTarget"></strong></p>
+                            <p class="mb-1">⏱️ Thời gian: <strong id="activePeriod"></strong></p>
+                            <p class="mb-0">📊 Tiến độ: <strong id="activeProgress"></strong></p>
                         </div>
                     </div>
+
+                    <h6 class="mt-4">📜 Các mục tiêu đã qua:</h6>
+                    <ul class="list-group" id="pastGoals"></ul>
+
                 </div>
             </div>
         </div>
+
+
+
 
         <!-- Analytics Tab -->
         <div class="tab-pane fade" id="analytics" role="tabpanel">
@@ -385,15 +447,6 @@
                                 </div>
                             </div>
 
-                            <div class="col-lg-7">
-                                <div class="card shadow-sm h-100">
-                                    <div class="card-header"><h6 class="mb-0">Xu hướng 6 tháng</h6></div>
-                                    <div class="card-body">
-                                        <canvas id="chartTrend" height="220"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-
                             <div class="col-lg-5">
                                 <div class="card shadow-sm h-100">
                                     <div class="card-header"><h6 class="mb-0">Top 5 danh mục</h6></div>
@@ -408,68 +461,102 @@
                             </div>
                         </div>
 
+                        <!-- Bot Box -->
+                        <div class="card shadow-sm mt-4" id="botBox">
+                            <div class="card-header d-flex align-items-center">
+                                <i class="fas fa-robot me-2 text-primary"></i>
+                                <h6 class="mb-0">Trợ lý chi tiêu AI</h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Lịch sử chat -->
+                                <div id="chatHistory" class="border rounded p-3 mb-3"
+                                     style="height:200px; overflow-y:auto; background:#fafafa">
+                                    <div class="text-muted small">💬 Hỏi tôi bất cứ điều gì về chi tiêu của bạn...</div>
+                                </div>
+
+                                <!-- Quick question-->
+                                <div class="mb-3">
+                                    <div class="small text-muted mb-2">❓ Câu hỏi gợi ý:</div>
+                                    <div id="quickQuestions" class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-sm btn-outline-secondary">Chi tiêu tháng này so với tháng trước?</button>
+                                        <button class="btn btn-sm btn-outline-secondary">Danh mục nào tốn nhiều tiền nhất?</button>
+                                        <button class="btn btn-sm btn-outline-secondary">Tôi có thể tiết kiệm ở đâu?</button>
+                                        <button class="btn btn-sm btn-outline-secondary">Xu hướng chi tiêu 6 tháng gần đây?</button>
+                                    </div>
+                                </div>
+
+                                <!-- Input -->
+                                <div class="input-group">
+                                    <input type="text" id="chatInput" class="form-control" placeholder="Nhập câu hỏi...">
+                                    <button class="btn btn-primary" id="sendChatBtn">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+
                     </div><!-- /premiumContent -->
 
                 </div>
             </div>
         </div>
 
-<!-- Add Expense Modal -->
-<div class="modal fade" id="addExpenseModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Thêm chi tiêu mới</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addExpenseForm">
-                    <div class="mb-3">
-                        <label for="expenseAmount" class="form-label">Số tiền</label>
-                        <input type="number" class="form-control" id="expenseAmount" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="expenseCategory" class="form-label">Danh mục</label>
-                        <select class="form-select" id="expenseCategory" required>
-                            <option value="">Chọn danh mục</option>
-                            <option value="Ăn uống">Ăn uống</option>
-                            <option value="Di chuyển">Di chuyển</option>
-                            <option value="Mua sắm">Mua sắm</option>
-                            <option value="Giải trí">Giải trí</option>
-                            <option value="Học tập">Học tập</option>
-                            <option value="Sức khỏe">Sức khỏe</option>
-                            <option value="Khác">Khác</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="expenseDescription" class="form-label">Mô tả</label>
-                        <textarea class="form-control" id="expenseDescription" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Phân loại</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="expenseType" id="goodExpense" value="good" checked>
-                            <label class="btn btn-outline-success" for="goodExpense">
-                                <i class="fas fa-thumbs-up me-2"></i>Chi tiêu tốt
-                            </label>
-                            <input type="radio" class="btn-check" name="expenseType" id="badExpense" value="bad">
-                            <label class="btn btn-outline-danger" for="badExpense">
-                                <i class="fas fa-thumbs-down me-2"></i>Chi tiêu xấu
-                            </label>
+        <!-- Add Expense Modal -->
+        <div class="modal fade" id="addExpenseModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="addExpenseForm">
+                        <input type="hidden" id="transactionId" value=""> <!-- để biết là edit hay add -->
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalTitle">Thêm chi tiêu</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" onclick="addExpense()">Thêm chi tiêu</button>
+                        <div class="modal-body">
+                            <div class="mb-2">
+                                <label>Số tiền</label>
+                                <input type="number" class="form-control" id="expenseAmount" required>
+                            </div>
+                            <div class="mb-2">
+                                <label>Danh mục</label>
+                                <select class="form-select" id="expenseCategory" required>
+                                    @foreach (var cat in Model.Categories)
+                                    {
+                                        <option value="@cat.CategoryId">@cat.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label>Mô tả</label>
+                                <input type="text" class="form-control" id="expenseDescription">
+                            </div>
+                            <div class="mb-2">
+                                <label>Ngày</label>
+                                <input type="date" class="form-control" id="expenseDate" required>
+                            </div>
+                            <div class="mb-2">
+                                <label>Loại</label><br>
+                                <input type="radio" name="TransactionType" value="Good" checked> Good
+                                <input type="radio" name="TransactionType" value="Bad"> Bad
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary" id="modalSubmit">Thêm</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+
+
+
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    <script>
+                const categories = @Html.Raw(Json.Serialize(Model.Categories));
+                const userId = 1; // 👈 Tạm hardcode userId (sau này thay bằng login thực)
+    </script>
     <script>
         // Initialize data from server
         window.expensesData = @Html.Raw(Json.Serialize(Model.Transactions));
@@ -527,436 +614,71 @@
         });
     </script>
 
-    <script>
-        (function () {
-          const raw = (window.expensesData || []).map(e => ({
-            ...e,
-            // Chuẩn hóa một vài field đề phòng null/khác tên:
-            Type: (e.Type || e.type || '').toString().toLowerCase(), // "good" | "bad"
-            Amount: Number(e.Amount ?? e.amount ?? 0),
-            Category: e.Category || e.category || '',
-            Description: e.Description || e.description || '',
-            Date: e.Date ? new Date(e.Date) : new Date()
-          }));
+                <script>
+                    async function loadAnalytics(userId) {
+                    try {
+                        const res = await fetch(`/api/analytics/monthly/${userId}`);
+                        const data = await res.json();
 
-          // refs
-          const $list = document.getElementById('expenseList');
-          const $empty = document.getElementById('expenseEmpty');
-          const $listCount = document.getElementById('listCount');
-          const $pillToday = document.getElementById('pillToday');
-          const $pillMonth = document.getElementById('pillMonth');
-          const $pillSaving = document.getElementById('pillSaving');
-          const $chips = document.querySelectorAll('.chip');
-          const $range = document.getElementById('filterRange');
-          const $cat = document.getElementById('filterCategory');
-          const $sort = document.getElementById('filterSort');
+                        // KPI
+                        document.getElementById("kpiMonthTotal").textContent = data.totalMonth.toLocaleString() + 'đ';
 
-          // state filter
-          let filter = { type: 'all', range: 'month', category: '', sort: 'date_desc' };
+                        const avgPerDay = data.avgPerDay || 0; // Lấy từ backend
+                        const kpiAvgDayEl = document.getElementById("kpiAvgDay");
+                        kpiAvgDayEl.textContent = Math.round(avgPerDay).toLocaleString('vi-VN') + "đ";
 
-          // events
-          $chips.forEach(ch => ch.addEventListener('click', () => {
-            $chips.forEach(c => c.classList.remove('active'));
-            ch.classList.add('active');
-            filter.type = ch.dataset.type;
-            render();
-          }));
-          [$range, $cat, $sort].forEach(sel => sel?.addEventListener('change', () => {
-            filter.range = $range.value;
-            filter.category = $cat.value || '';
-            filter.sort = $sort.value;
-            render();
-          }));
+                        document.getElementById("kpiTopCat").textContent = data.topCategory?.name || '—';
+                        document.getElementById("kpiTopCatAmt").textContent = data.topCategory?.amount.toLocaleString() + 'đ' || '0đ';
+                        document.getElementById("kpiBadRate").textContent = data.badRate.toFixed(1) + '%';
+                        document.getElementById("kpiBadCount").textContent = data.badCount + ' giao dịch';
+                        document.getElementById("tipSmart").textContent = data.smartTip || '—';
 
-          // helpers
-          const sameDay = (a,b)=> a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-          function inRange(d, key){
-            const now = new Date();
-            if(key==='month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
-            if(key==='week'){
-              const first = new Date(now); first.setDate(now.getDate()-now.getDay()); // CN đầu tuần
-              const last = new Date(first); last.setDate(first.getDate()+6);
-              return d>=first && d<=last;
-            }
-            if(key==='last30'){
-              const from = new Date(now); from.setDate(now.getDate()-30);
-              return d>=from && d<=now;
-            }
-            return true; // custom: để true (UI demo)
-          }
-          const vnd = n => (n||0).toLocaleString('vi-VN') + 'đ';
+                        // Top 5 categories
+                        const top5List = document.getElementById("topCatList");
+                        top5List.innerHTML = '';
+                        data.top5.forEach(c => {
+                            const li = document.createElement("li");
+                            li.textContent = `${c.name}: ${c.amount.toLocaleString()}đ`;
+                            top5List.appendChild(li);
+                        });
 
-          function calcPills(items){
-            const now = new Date();
-            const todaySum = items.filter(x => sameDay(x.Date, now))
-                                  .reduce((s,x)=> s + x.Amount, 0);
-            const monthSum = items.filter(x => x.Date.getFullYear()===now.getFullYear() && x.Date.getMonth()===now.getMonth())
-                                  .reduce((s,x)=> s + x.Amount, 0);
-            // demo “tiết kiệm”: giả sử tổng tốt - tổng xấu trong tháng
-            const good = items.filter(x => x.Date.getFullYear()===now.getFullYear() && x.Date.getMonth()===now.getMonth() && x.Type==='good')
-                              .reduce((s,x)=> s + x.Amount, 0);
-            const bad  = items.filter(x => x.Date.getFullYear()===now.getFullYear() && x.Date.getMonth()===now.getMonth() && x.Type==='bad')
-                              .reduce((s,x)=> s + x.Amount, 0);
-            $pillToday.textContent = vnd(todaySum);
-            $pillMonth.textContent = vnd(monthSum);
-            $pillSaving.textContent = vnd(good - bad);
-          }
+                        // Chart theo category (Chart.js)
+                        const catLabels = data.categories.map(c => c.name);
+                        const catData = data.categories.map(c => c.amount);
+                        new Chart(document.getElementById('chartByCategory'), {
+                            type: 'pie',
+                            data: {
+                                labels: catLabels,
+                                datasets: [{
+                                    data: catData,
+                                    backgroundColor: data.categories.map(c => c.color || getRandomColor())
+                                }]
+                            }
+                        });
 
-          function renderRow(x){
-            const isGood = x.Type === 'good';
-            const signClass = isGood ? 'amount-good' : 'amount-bad';
-            const badgeClass = isGood ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
-            const icon = isGood ? 'fa-thumbs-up' : 'fa-thumbs-down';
-            const date = x.Date.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit' });
+                        // Chart theo ngày
+                        const dayLabels = data.daily.map(d => d.day);
+                        const dayData = data.daily.map(d => d.amount);
+                        new Chart(document.getElementById('chartByDay'), {
+                            type: 'bar',
+                            data: {
+                                labels: dayLabels,
+                                datasets: [{ data: dayData, backgroundColor: '#007bff' }]
+                            }
+                        });
 
-            return `
-              <div class="list-group-item expense-row">
-                <div class="row align-items-center g-2">
-                  <div class="col-auto">
-                    <span class="rounded-circle icon-dot ${isGood?'good':'bad'}">
-                      <i class="fas ${icon}"></i>
-                    </span>
-                  </div>
-                  <div class="col">
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                      <strong>${x.Category}</strong>
-                      <span class="badge ${badgeClass} rounded-pill ms-1">${isGood ? 'Tốt' : 'Xấu'}</span>
-                    </div>
-                    <div class="text-muted small">${x.Description || ''}</div>
-                  </div>
-                  <div class="col-auto text-end">
-                    <div class="${signClass} fw-bold">${vnd(x.Amount)}</div>
-                    <div class="text-muted small">${date}</div>
-                  </div>
-                </div>
-              </div>`;
-          }
-
-          function render(){
-            // filter
-            let items = raw.filter(x => (filter.type==='all' || x.Type===filter.type))
-                           .filter(x => inRange(x.Date, filter.range))
-                           .filter(x => !filter.category || x.Category===filter.category);
-
-            // sort
-            items.sort((a,b)=>{
-              if(filter.sort==='date_desc') return b.Date - a.Date;
-              if(filter.sort==='date_asc')  return a.Date - b.Date;
-              if(filter.sort==='amount_desc') return b.Amount - a.Amount;
-              if(filter.sort==='amount_asc')  return a.Amount - b.Amount;
-              return 0;
-            });
-
-            // render list
-            if(items.length===0){
-              $list.innerHTML = '';
-              $empty.classList.remove('d-none');
-              $listCount.textContent = '(0 mục)';
-            } else {
-              $empty.classList.add('d-none');
-              $list.innerHTML = items.map(renderRow).join('');
-              $listCount.textContent = `(${items.length} mục)`;
-            }
-
-            // update pills (dựa theo toàn bộ items đã lọc theo “thời gian”, cho cảm giác nhất quán)
-            calcPills(items);
-          }
-
-          // kick
-          render();
-        })();
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          // ====== helpers ======
-          const fmtVND = n => (isNaN(n) ? '0đ' : n.toLocaleString('vi-VN') + 'đ');
-          const parseNumber = v => Number(String(v).replace(/[^\d]/g,'') || 0);
-
-          const elMonthly = document.getElementById('monthlyTarget');
-          const elDaily   = document.getElementById('dailyLimit');
-
-          // khối tóm tắt (đã có sẵn id)
-          const boxSummary = document.getElementById('goalSummary');
-          const targetDisplay = document.getElementById('targetDisplay');
-          const limitDisplay  = document.getElementById('limitDisplay');
-          const progressDisplay = document.getElementById('progressDisplay');
-
-          // ====== UI phụ: 3 thẻ info nhỏ + vòng tiến độ (render ngay dưới form) ======
-          const form = document.getElementById('savingsGoalForm');
-          const extra = document.createElement('div');
-          extra.className = 'goal-grid';
-          extra.innerHTML = `
-            <div class="goal-card">
-              <h6>Gợi ý hạn mức/ngày</h6>
-              <div class="goal-hint">Dựa trên mục tiêu tháng và số ngày còn lại.</div>
-              <div class="mt-2"><span class="goal-chip" id="chipSuggest">0đ / ngày</span></div>
-            </div>
-            <div class="goal-card">
-              <h6>Ngày còn lại trong tháng</h6>
-              <div class="goal-hint" id="daysLeftText">—</div>
-            </div>
-            <div class="goal-card">
-              <h6>Xem trước tiến độ</h6>
-              <div class="goal-preview">
-                <div class="goal-ring" id="goalRing"><span>0%</span></div>
-                <div class="goal-hint">Tiến độ ước tính so với mục tiêu đặt ra.</div>
-              </div>
-            </div>
-          `;
-          form.after(extra);
-
-          const chipSuggest = document.getElementById('chipSuggest');
-          const goalRing    = document.getElementById('goalRing');
-          const daysLeftText= document.getElementById('daysLeftText');
-
-          // ====== logic tính toán UI (thuần FE/demo) ======
-          function getDaysInMonth(date=new Date()){
-            return new Date(date.getFullYear(), date.getMonth()+1, 0).getDate();
-          }
-          function getTodayIndex(date=new Date()){ return date.getDate(); }
-
-          function calc(){
-            const monthTarget = parseNumber(elMonthly.value);
-            const dayLimit    = parseNumber(elDaily.value);
-
-            // ngày/tháng
-            const daysInMonth = getDaysInMonth();
-            const dayIdx = getTodayIndex();
-            const daysLeft = Math.max(0, daysInMonth - dayIdx + 1);
-            daysLeftText.textContent = `${daysLeft} ngày`;
-
-            // gợi ý hạn mức/ngày: nếu người dùng chưa nhập dailyLimit → đề xuất = (mục tiêu / số ngày còn lại)
-            const suggested = monthTarget > 0 && daysLeft > 0 ? Math.max(0, Math.round(monthTarget / daysLeft)) : 0;
-            if(!dayLimit){ chipSuggest.textContent = fmtVND(suggested) + ' / ngày'; }
-            else{ chipSuggest.textContent = fmtVND(dayLimit) + ' / ngày'; }
-
-            // tiến độ ước tính (demo): giả sử đã đi được tỉ lệ ngày trong tháng và giữ dưới hạn mức → % = min( (ngày đã qua/daysInMonth)*100, 100 )
-            const percent = Math.min(100, Math.round((dayIdx/daysInMonth)*100));
-            goalRing.style.setProperty('--deg', (percent/100*360)+'deg');
-            goalRing.querySelector('span').textContent = percent + '%';
-
-            // tóm tắt
-            targetDisplay.textContent = fmtVND(monthTarget);
-            limitDisplay.textContent  = fmtVND(dayLimit || suggested);
-            progressDisplay.textContent = percent + '%';
-            boxSummary.style.display = 'block';
-          }
-
-          // ====== auto-format tiền khi blur (chỉ hiển thị – giá trị thật vẫn là số) ======
-          function attachMoneyMask(input){
-            input.addEventListener('input', ()=> {
-              // đừng format trong lúc gõ để không nhảy caret; chỉ tính toán preview
-              calc();
-            });
-            input.addEventListener('blur', ()=> {
-              const n = parseNumber(input.value);
-              input.value = n ? n : '';
-              calc();
-            });
-          }
-          attachMoneyMask(elMonthly);
-          attachMoneyMask(elDaily);
-
-          // ====== khởi tạo từ window.savingsGoalData hoặc localStorage (demo) ======
-          const savedLocal = JSON.parse(localStorage.getItem('minibit-goal')||'{}');
-          if(savedLocal.monthlyTarget) elMonthly.value = savedLocal.monthlyTarget;
-          if(savedLocal.dailyLimit)    elDaily.value   = savedLocal.dailyLimit;
-
-          if(window.savingsGoalData){
-            if(!elMonthly.value && window.savingsGoalData.MonthlyTarget) elMonthly.value = window.savingsGoalData.MonthlyTarget;
-            if(!elDaily.value   && window.savingsGoalData.DailyLimit)    elDaily.value   = window.savingsGoalData.DailyLimit;
-          }
-
-          calc();
-
-          // ====== chặn submit thật – chỉ UI; lưu tạm và hiển thị toast ======
-          form.addEventListener('submit', (e)=>{
-            e.preventDefault();
-            const monthTarget = parseNumber(elMonthly.value);
-            const dayLimit    = parseNumber(elDaily.value);
-            localStorage.setItem('minibit-goal', JSON.stringify({monthlyTarget: monthTarget, dailyLimit: dayLimit}));
-
-            // mini feedback
-            const btn = form.querySelector('button[type="submit"]');
-            const old = btn.innerHTML;
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-check me-2"></i>Đã lưu';
-            setTimeout(()=>{ btn.disabled = false; btn.innerHTML = old; }, 1200);
-
-            calc();
-          });
-        });
-    </script>
-
-            <script>
-                (function () {
-                  const isPremium = !!window.isPremium;               // từ server
-                  const rows = Array.isArray(window.expensesData) ? window.expensesData : [];
-                  const goal  = window.savingsGoalData || {MonthlyTarget:0, DailyLimit:0};
-
-                  // Gate Premium UI (nếu BE chưa render sẵn)
-                  const promo = document.getElementById('premiumPromo');
-                  const content = document.getElementById('premiumContent');
-                  const unlock = document.getElementById('unlockPremiumBtn');
-                  if (isPremium) { promo?.classList.add('d-none'); content?.style.setProperty('display','block'); }
-                  unlock?.addEventListener('click', ()=>{ promo?.classList.add('d-none'); content?.style.setProperty('display','block'); });
-
-                  // Helper: money format
-                  const f = n => (n||0).toLocaleString('vi-VN')+'đ';
-                  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-                  const endOfMonth   = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0);
-                  document.getElementById('analyticsRangeLabel')?.innerText =
-                    `Tháng ${startOfMonth.getMonth()+1}/${startOfMonth.getFullYear()}`;
-
-                  // Filter tháng này
-                  const monthRows = rows.filter(r => {
-                    const d = new Date(r.date || r.Date);
-                    return d >= startOfMonth && d <= endOfMonth;
-                  });
-
-                  // Tổng theo danh mục/thời gian
-                  const byCategory = {};
-                  const byDay = {};
-                  let totalMonth = 0, badCount = 0, badAmount = 0;
-
-                  monthRows.forEach(r=>{
-                    const amt = +r.amount || +r.Amount || 0;
-                    const cat = (r.category || r.Category || 'Khác').trim();
-                    const type= (r.type || r.Type || '').toString().toLowerCase();
-
-                    byCategory[cat] = (byCategory[cat]||0) + amt;
-                    const d = new Date(r.date || r.Date).getDate();
-                    byDay[d] = (byDay[d]||0) + amt;
-
-                    totalMonth += amt;
-                    if (type === 'bad') { badCount++; badAmount += amt; }
-                  });
-
-                  // KPI cards
-                  document.getElementById('kpiMonthTotal')?.innerText = f(totalMonth);
-                  const daysInMonth = endOfMonth.getDate();
-                  const today = new Date().getDate();
-                  const avgDay = totalMonth / Math.max(1, today);
-                  document.getElementById('kpiAvgDay')?.innerText = f(Math.round(avgDay));
-                  document.getElementById('kpiBadRate')?.innerText =
-                    Math.round((badAmount/Math.max(1,totalMonth))*100) + '%';
-                  document.getElementById('kpiBadCount')?.innerText = `${badCount} giao dịch`;
-
-                  // Top category
-                  const sortedCats = Object.entries(byCategory).sort((a,b)=>b[1]-a[1]);
-                  if (sortedCats[0]) {
-                    document.getElementById('kpiTopCat')?.innerText = sortedCats[0][0];
-                    document.getElementById('kpiTopCatAmt')?.innerText = f(sortedCats[0][1]);
-                  }
-
-                  // Hint theo DailyLimit
-                  const limit = +goal.DailyLimit || 0;
-                  if (limit > 0) {
-                    const hint = document.getElementById('kpiLimitHint');
-                    if (avgDay <= limit) {
-                      hint?.classList.add('text-success'); hint?.classList.remove('text-danger');
-                      hint && (hint.textContent = 'Trong giới hạn 🎯');
-                    } else {
-                      hint?.classList.add('text-danger'); hint?.classList.remove('text-success');
-                      hint && (hint.textContent = 'Vượt giới hạn ngày ⚠️');
+                    } catch (err) {
+                        console.error("Không thể load analytics:", err);
                     }
-                  }
+                }
 
-                  // Smart tip
-                  const tipBox = document.getElementById('tipSmart');
-                  if (sortedCats[0]) {
-                    const top = sortedCats[0];
-                    tipBox && (tipBox.textContent =
-                      `Danh mục “${top[0]}” đang chiếm tỷ trọng lớn. Hãy thử giảm 10% ở danh mục này, bạn sẽ tiết kiệm thêm ${f(Math.round(top[1]*0.1))}.`);
-                  }
+                // Random màu cho category nếu không có
+                function getRandomColor() {
+                    return '#' + Math.floor(Math.random()*16777215).toString(16);
+                }
 
-                  // Màu từ CSS variables
-                  const css = getComputedStyle(document.documentElement);
-                  const cPrimary = css.getPropertyValue('--minibit-primary').trim() || '#8b5cf6';
-                  const cSuccess = css.getPropertyValue('--minibit-success').trim() || '#22c55e';
-                  const cWarning = css.getPropertyValue('--minibit-warning').trim() || '#f59e0b';
-                  const cInfo    = css.getPropertyValue('--minibit-info').trim()    || '#3b82f6';
-
-                  // ---- Chart: by Category (doughnut) ----
-                  if (document.getElementById('chartByCategory')) {
-                    const labels = sortedCats.map(x=>x[0]);
-                    const data   = sortedCats.map(x=>x[1]);
-                    const palette = [cPrimary,cSuccess,cInfo,cWarning,'#60a5fa','#34d399','#f472b6','#fbbf24','#a78bfa','#10b981'];
-                    const colors = labels.map((_,i)=>palette[i%palette.length]);
-
-                    new Chart(document.getElementById('chartByCategory'),{
-                      type:'doughnut',
-                      data:{ labels, datasets:[{ data, backgroundColor:colors, borderWidth:0 }]},
-                      options:{
-                        plugins:{ legend:{ display:false }},
-                        cutout:'60%'
-                      }
-                    });
-
-                    // Legend tay cho đẹp
-                    const ul = document.getElementById('catLegend'); ul.innerHTML='';
-                    labels.forEach((lb,i)=>{
-                      const li = document.createElement('li');
-                      li.innerHTML = `<i style="background:${colors[i]}"></i> ${lb} - <strong>${f(data[i])}</strong>`;
-                      ul.appendChild(li);
-                    });
-                  }
-
-                  // ---- Chart: by Day (bar) ----
-                  if (document.getElementById('chartByDay')) {
-                    const days = Array.from({length: endOfMonth.getDate()}, (_,i)=>i+1);
-                    const vals = days.map(d=>byDay[d]||0);
-                    new Chart(document.getElementById('chartByDay'),{
-                      type:'bar',
-                      data:{ labels:days, datasets:[{ data:vals, backgroundColor:cInfo }]},
-                      options:{
-                        scales:{ x:{ grid:{display:false}}, y:{ grid:{color:'rgba(0,0,0,.06)'}}},
-                        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=>f(ctx.parsed.y) }}}
-                      }
-                    });
-                  }
-
-                  // ---- Chart: Trend 6 months (line) ----
-                  if (document.getElementById('chartTrend')) {
-                    const now = new Date();
-                    const months = [];
-                    const values = [];
-                    for (let i=5;i>=0;i--){
-                      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-                      const label = `${('0'+(d.getMonth()+1)).slice(-2)}/${d.getFullYear()}`;
-                      months.push(label);
-                      // tạm tính: lấy dữ liệu tháng tương ứng (nếu có), không thì 0
-                      const sum = rows.reduce((acc,r)=>{
-                        const dr = new Date(r.date || r.Date);
-                        if (dr.getFullYear()===d.getFullYear() && dr.getMonth()===d.getMonth()){
-                          acc += (+r.amount || +r.Amount || 0);
-                        }
-                        return acc;
-                      },0);
-                      values.push(sum);
-                    }
-                    new Chart(document.getElementById('chartTrend'),{
-                      type:'line',
-                      data:{ labels:months, datasets:[{ data:values, borderColor:cPrimary, backgroundColor:cPrimary+'22', tension:.3, fill:true, pointRadius:3 }]},
-                      options:{
-                        scales:{ x:{ grid:{display:false}}, y:{ grid:{color:'rgba(0,0,0,.06)'}}},
-                        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=>f(ctx.parsed.y) }}}
-                      }
-                    });
-
-                    // So sánh với tháng trước
-                    if (values.length>=2){
-                      const diff = values.at(-1) - values.at(-2);
-                      const el = document.getElementById('kpiMonthCompare');
-                      if (el){
-                        const up = diff>0;
-                        el.classList.toggle('text-danger', up);
-                        el.classList.toggle('text-success', !up);
-                        el.textContent = `So với tháng trước: ${up?'+':''}${f(diff)}`;
-                      }
-                    }
-                  }
-                })();
+                // Load cho userId = 1
+                loadAnalytics(1);
             </script>
 
 
@@ -1031,12 +753,44 @@
                     transactions.forEach(t => {
                         const tr = document.createElement("tr");
 
+                        let ratingIcon = "";
+                        if (t.transactionType === "Good") {
+                            ratingIcon = '<i class="fas fa-thumbs-up text-success"></i>';
+                        } else if (t.transactionType === "Bad") {
+                            ratingIcon = '<i class="fas fa-thumbs-down text-danger"></i>';
+                        } else {
+                            ratingIcon = '<i class="fas fa-circle text-secondary"></i>'; // null → tròn xám
+                        }
+
                         tr.innerHTML = `
-                            <td>${t.transactionDate ? new Date(t.transactionDate).toLocaleDateString() : ""}</td>
-                            <td>${t.description ?? ""}</td>
-                            <td>${t.category ? t.category.name ?? t.category.Name : ""}</td>
-                            <td>${t.transactionType}</td>
-                            <td>${t.amount?.toLocaleString() ?? 0} VND</td>
+                            <td class="date-cell" data-date="${t.transactionDate ? new Date(t.transactionDate).toISOString().split('T')[0] : ''}">
+                                ${t.transactionDate ? new Date(t.transactionDate).toLocaleDateString() : ""}
+                            </td>
+                            <td class="description-cell">${t.description ?? ""}</td>
+                            <td>
+                                <select class="form-select form-select-sm category-select" data-id="${t.transactionId}">
+                                    ${categories.map(c => `
+                                        <option value="${c.categoryId}" ${t.categoryId === c.categoryId ? "selected" : ""}>
+                                            ${c.name}
+                                        </option>
+                                    `).join("")}
+                                </select>
+                            </td>
+                            <td>${t.amount < 0 ? "Chi tiêu" : "Thu nhập"}</td>
+                            <td class="text-end amount-cell">
+                                <span class="amount-value ${t.amount < 0 ? "text-danger" : "text-success"}">
+                                    ${t.amount?.toLocaleString() ?? 0}đ
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="rating-icon" data-id="${t.transactionId}" data-type="${t.transactionType ?? ""}">
+                                    ${ratingIcon}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary me-1 update-btn" data-id="${t.transactionId}">Update</button>
+                                <button class="btn btn-sm btn-danger delete-btn" data-id="${t.transactionId}">Delete</button>
+                            </td>
                         `;
 
                         tbody.appendChild(tr);
@@ -1063,6 +817,332 @@
                 });
             </script>
 
+            <script>
+
+                document.getElementById("sendChatBtn").addEventListener("click", async () => {
+                    const input = document.getElementById("chatInput");
+                    const history = document.getElementById("chatHistory");
+                    const question = input.value.trim();
+                    if (!question) return;
+
+                    // Hiển thị câu hỏi của user
+                    history.innerHTML += `
+                        <div class="text-end mb-2">
+                            <span class="badge bg-primary">${question}</span>
+                        </div>`;
+                    input.value = "";
+                    history.scrollTop = history.scrollHeight;
+
+                    try {
+                        // Gọi API bot
+                        const res = await fetch(`/api/AI/advice/${userId}`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(question)
+                        });
+                        const data = await res.json();
+                        console.log("👉 Data từ server:", data);
+
+                        // Hiển thị câu trả lời
+                        history.innerHTML += `
+                            <div class="text-start mb-2">
+                                <span class="badge bg-light text-dark" style="white-space: pre-wrap;">${data.advice}</span>
+                            </div>`;
+                        history.scrollTop = history.scrollHeight;
+                    } catch (e) {
+                        history.innerHTML += `<div class="text-danger small">❌ Lỗi kết nối bot</div>`;
+                    }
+                });
+
+                // Quick question click handler
+                document.querySelectorAll("#quickQuestions button").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        document.getElementById("chatInput").value = btn.textContent;
+                        document.getElementById("sendChatBtn").click();
+                    });
+                });
+            </script>
+
+            <script>
+                
+                document.addEventListener("change", async (e) => {
+                    if (e.target.classList.contains("category-select")) {
+                        const transactionId = parseInt(e.target.dataset.id);   // ép về int
+                        const newCategoryId = parseInt(e.target.value);
+
+                                        console.log("Sending update:", {
+                    transactionId: transactionId,
+                    categoryId: newCategoryId
+                });
+                        try {
+                            const response = await fetch("/Home/UpdateTransactionCategory", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    transactionId: transactionId,
+                                    categoryId: newCategoryId
+                                })
+                            });
+
+                            if (!response.ok) {
+                                throw new Error("Request lỗi " + response.status);
+                            }
+
+                            const result = await response.json();
+
+                            if (!result.success) {
+                                throw new Error("Lỗi cập nhật danh mục");
+                            }
+
+                            console.log(`Transaction ${transactionId} đã đổi sang category ${newCategoryId}`);
+
+                        } catch (err) {
+                            console.error(err);
+                            alert("Không thể cập nhật danh mục");
+                        }
+                    }
+                });
+            </script>
+
+            @* Toogle Icon Type *@
+            <script>
+
+                 document.addEventListener("click", async (e) => {
+                    const target = e.target;
+
+                    // ===== Rating toggle =====
+                    const span = target.closest(".rating-icon");
+                    if (span) {
+                        let type = span.dataset.type; // null / Good / Bad
+
+                        // Toggle logic: null → Good → Bad → Good ↔ Bad
+                        if (!type) type = "Good";
+                        else if (type === "Good") type = "Bad";
+                        else if (type === "Bad") type = "Good";
+
+                        // Update icon ngay lập tức
+                        span.dataset.type = type;
+                        span.innerHTML = type === "Good"
+                            ? '<i class="fas fa-thumbs-up text-success"></i>'
+                            : '<i class="fas fa-thumbs-down text-danger"></i>';
+
+                        // Gửi fetch POST lên server
+                        try {
+                            const res = await fetch("/Home/UpdateTransactionType", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    transactionId: parseInt(span.dataset.id),
+                                    transactionType: type
+                                })
+                            });
+                            const data = await res.json();
+                            if (!data.success) throw new Error(data.message || "Không thể cập nhật TransactionType");
+                        } catch (err) {
+                            console.error(err);
+                            alert(err.message);
+                        }
+                        return;
+                    }
+
+                    // ===== Update transaction =====
+                    if (target.classList.contains("update-btn")) {
+                        const row = target.closest("tr");
+                        const transactionId = target.dataset.id;
+                        const amountText = row.querySelector(".amount-cell .amount-value").textContent;
+                        const amount = parseFloat(amountText.replace("đ", "").replaceAll(",", ""));
+                        const description = row.querySelector(".description-cell").textContent;
+                        const categoryId = row.querySelector(".category-select").value;
+                        const date = row.querySelector(".date-cell").dataset.date;
+                        const type = row.querySelector(".rating-icon").dataset.type || "Good";
+
+                        // Điền vào modal
+                        document.getElementById("transactionId").value = transactionId;
+                        document.getElementById("expenseAmount").value = amount;
+                        document.getElementById("expenseDescription").value = description;
+                        document.getElementById("expenseCategory").value = categoryId;
+                        document.getElementById("expenseDate").value = date;
+                        document.querySelector(`input[name="TransactionType"][value="${type}"]`).checked = true;
+
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById("addExpenseModal")).show();
+                        return;
+                    }
+
+                    // ===== Delete transaction =====
+                    if (target.classList.contains("delete-btn")) {
+                        const transactionId = parseInt(target.dataset.id);
+                        if (!confirm("Bạn có chắc muốn xóa giao dịch này?")) return;
+
+                        try {
+                            const res = await fetch("/Home/DeleteTransaction", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ transactionId })
+                            });
+                            const data = await res.json();
+                            if (!data.success) throw new Error(data.message || "Xóa thất bại");
+                            target.closest("tr").remove();
+                            console.log(`Transaction ${transactionId} đã bị xóa`);
+                        } catch (err) {
+                            console.error(err);
+                            alert(err.message);
+                        }
+                        return;
+                    }
+                });
+
+                // ===== Thêm / Chỉnh sửa transaction =====
+                document.getElementById("addExpenseForm").addEventListener("submit", async (e)=>{
+                    e.preventDefault();
+
+                    const transactionId = document.getElementById("transactionId")?.value || null;
+                    const transaction = {
+                        TransactionId: transactionId ? parseInt(transactionId) : 0, // 0 => thêm mới
+                        Amount: Number(document.getElementById("expenseAmount").value),
+                        CategoryId: parseInt(document.getElementById("expenseCategory").value),
+                        Description: document.getElementById("expenseDescription").value,
+                        TransactionDate: document.getElementById("expenseDate").value,
+                        TransactionType: document.querySelector('input[name="TransactionType"]:checked').value
+                    };
+
+                    const url = transactionId ? "/Home/UpdateTransaction" : "/Home/AddTransaction";
+
+                    try {
+                        const res = await fetch(url, {
+                            method:"POST",
+                            headers:{"Content-Type":"application/json"},
+                            body: JSON.stringify(transaction)
+                        });
+                        const data = await res.json();
+                        if (!data.success) throw new Error(data.message || "Thất bại");
+
+                        bootstrap.Modal.getInstance(document.getElementById("addExpenseModal")).hide();
+                        e.target.reset();
+                        await loadTransactions(); // fetch lại bảng
+                    } catch (err) {
+                        console.error(err);
+                        alert(err.message);
+                    }
+                });
+            </script>
+
+
+            <script>
+                $(document).ready(function () {
+                    const userId = 1; // thử với userId = 1
+
+                    // Load goals khi vào tab
+                    loadGoals(userId);
+
+                    // Submit form tạo goal
+                    $("#savingsGoalForm").submit(function (e) {
+                        e.preventDefault();
+
+                        const startDate = $("#startDate").val();
+                        const endDate = $("#endDate").val();
+
+                        if (!startDate || !endDate) {
+                            alert("Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc!");
+                            return;
+                        }
+
+                        if (new Date(endDate) < new Date(startDate)) {
+                            alert("Ngày kết thúc phải sau ngày bắt đầu!");
+                            return;
+                        }
+
+                        const data = {
+                            userId: userId,
+                            name: $("#goalName").val(),
+                            targetAmount: Number($("#targetAmount").val()),
+                            currentAmount: 0,
+                            startDate: startDate,
+                            endDate: endDate,
+                            status: "open"
+                        };
+
+                        console.log("📤 Submitting goal:", data);
+
+                        $.ajax({
+                            url: "/api/goals/create",
+                            type: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify(data),
+                            success: function (res) {
+                                alert("Lưu thành công!");
+                                loadGoals(userId);
+                                $("#savingsGoalForm")[0].reset();
+                            },
+                            error: function (err) {
+                                console.error("❌ Error creating goal:", err);
+                                alert("Có lỗi khi lưu!");
+                            }
+                        });
+                    });
+
+
+                    // Hàm load goals
+                    function loadGoals(userId) {
+                         // Load active goal
+                        $.ajax({
+                            url: `/api/goals/active/${userId}`,
+                            type: "GET",
+                            success: function (res) {
+                                if (!res) {
+                                    $("#goalSummary").hide();
+                                } else {
+                                    $("#goalSummary").show();
+                                    $("#activeName").text(res.goalName ?? "");
+                                    $("#activeTarget").text((res.targetAmount ?? 0).toLocaleString("vi-VN") + "đ");
+
+                                    // hiển thị start -> end
+                                    const start = res.startDate ? new Date(res.startDate).toLocaleDateString("vi-VN") : "";
+                                    const end = res.endDate ? new Date(res.endDate).toLocaleDateString("vi-VN") : "";
+                                    $("#activePeriod").text(start && end ? `${start} → ${end}` : "");
+
+                                    $("#activeProgress").text((res.progressPercent ?? 0).toFixed(0) + "%");
+                                }
+                            },
+                            error: function () { $("#goalSummary").hide(); }
+                        });
+
+
+                        // Load all user goals
+                        $.ajax({
+                            url: `/api/goals/user/${userId}`,
+                            type: "GET",
+                            success: function (goals) {
+                                $("#pastGoals").empty();
+                                if (!goals || goals.length === 0) {
+                                    $("#pastGoals").append(`<li class="list-group-item">Chưa có mục tiêu nào</li>`);
+                                } else {
+                                    const today = new Date();
+                                    goals.forEach(g => {
+                                        const endDate = g.endDate ? new Date(g.endDate) : null;
+                                        if (endDate && endDate < today) { // past goal
+                                            const startDate = g.startDate ? new Date(g.startDate).toLocaleDateString("vi-VN") : "";
+                                            const endStr = endDate.toLocaleDateString("vi-VN");
+                                            $("#pastGoals").append(`
+                                                <li class="list-group-item">
+                                                    🎯 <strong>${g.name}</strong>
+                                                    - 💰 ${(g.targetAmount ?? 0).toLocaleString("vi-VN")}đ
+                                                    - ⏱️ ${startDate} → ${endStr}
+                                                </li>
+                                            `);
+                                        }
+                                    });
+                                    if ($("#pastGoals").children().length === 0) {
+                                        $("#pastGoals").append(`<li class="list-group-item">Chưa có mục tiêu nào</li>`);
+                                    }
+                                }
+                            },
+                            error: function () {
+                                $("#pastGoals").empty().append(`<li class="list-group-item">Không thể load goals!</li>`);
+                            }
+                        });
+                    }
+                });
+            </script>
 
 
 }

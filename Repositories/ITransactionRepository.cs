@@ -14,5 +14,10 @@ namespace Repositories
         Task UpdateTransactionAsync(Transaction transaction);
         Task DeleteTransactionAsync(Transaction transaction);
         Task AddListTransactionsAsync(IEnumerable<Transaction> transactions);
+        Task<decimal> GetMonthlySpendingByUserIdAsync(int userId);
+        Task<decimal> GetTodaySpendingByUserIdAsync(int userId);
+        Task<decimal> GetMonthlySavingByUserIdAsync(int userId);
+        Task<Transaction> GetTransactionAsyncByTransactionId(int transactionId);
+        Task<decimal> GetTotalSavedByUserInRangeAsync(int userId, DateOnly start, DateOnly end);
     }
 }

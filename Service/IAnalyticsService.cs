@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Service
 {
-    public interface IBudgetService
+    public interface IAnalyticsService
     {
-        Task<Budget?> GetBudgetByUserIdAsync(int userId);
+        Task<AnalyticsDto> GetMonthlyAnalyticsAsync(int userId, DateTime start, DateTime end);
     }
 }
