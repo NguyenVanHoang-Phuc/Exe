@@ -19,5 +19,6 @@ namespace Service
         Task<decimal> GetMonthlySavingByUserIdAsync(int userId);
         Task<Transaction> GetTransactionAsyncByTransactionId(int transactionId);
         Task<bool> UpdateTransactionCategoryAsync(int transactionId, int categoryId);
+        Task<decimal> GetTotalSavedByUserInRangeAsync(int userId, DateOnly start, DateOnly end);
     }
 }

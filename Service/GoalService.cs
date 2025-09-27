@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BusinessObject.Models;
+using Repositories;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +10,80 @@ namespace Service
 {
     public class GoalService : IGoalService
     {
+        private readonly IGoalRepository _goalRepo;
+        private readonly IBudgetRepository _budgetRepo;
+        private readonly ITransactionRepository _tranRepo;
+
+        public GoalService(IGoalRepository goalRepo, IBudgetRepository budgetRepo , ITransactionRepository transactionRepository)
+        {
+            _goalRepo = goalRepo;
+            _budgetRepo = budgetRepo;
+            _tranRepo = transactionRepository;
+        }
+
+        public async Task<Goal> CreateGoalAsync(Goal goal)
+        {
+            goal.CreatedAt = DateTime.Now;
+            goal.Status = "open";
+            if (goal.StartDate == null)
+            {
+                goal.StartDate = DateOnly.FromDateTime(DateTime.Today);
+            }
+
+            // Lưu goal -> trigger DB tự phân bổ budget
+            var createdGoal = await _goalRepo.AddAsync(goal);
+
+            return createdGoal;
+        }
+
+        public async Task<List<Goal>> GetGoalsByUserAsync(int userId)
+        {
+            return await _goalRepo.GetByUserIdAsync(userId);
+        }
+
+        public async Task DeleteGoalAsync(int goalId)
+        {
+            var goal = await _goalRepo.GetByIdAsync(goalId);
+            if (goal == null) throw new Exception("Goal not found");
+
+            if (goal.Budgets.Any())
+            {
+                await _budgetRepo.DeleteRangeAsync(goal.Budgets.ToList());
+            }
+
+            await _goalRepo.DeleteAsync(goal);
+        }
+
+        public async Task<Goal?> GetActiveGoalByUserAsync(int userId)
+        {
+            return await _goalRepo.GetActiveGoalByUserIdAsync(userId);
+        }
+
+        public async Task<(Goal goal, decimal savedAmount, decimal progressPercent)?> GetActiveGoalWithProgressAsync(int userId)
+        {
+            var goal = await _goalRepo.GetActiveGoalByUserIdAsync(userId);
+            if (goal == null) return null;
+
+            // StartDate dùng StartDate của goal, nếu null thì mặc định Today
+            var startDate = goal.StartDate;
+
+            // EndDate dùng EndDate của goal, nếu null thì lấy tháng hiện tại
+            var endDate = goal.EndDate ?? DateOnly.FromDateTime(DateTime.Today);
+
+            // Lấy tổng tiền đã tiết kiệm trong khoảng StartDate → EndDate
+            var savedAmount = await _tranRepo.GetTotalSavedByUserInRangeAsync(userId, startDate, endDate);
+
+            decimal progressPercent = 0;
+            if (goal.TargetAmount > 0)
+            {
+                progressPercent = (savedAmount / goal.TargetAmount) * 100;
+                if (progressPercent > 100) progressPercent = 100; // giới hạn max 100%
+            }
+
+            return (goal, savedAmount, progressPercent);
+        }
+
+
+
     }
 }

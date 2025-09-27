@@ -3,11 +3,17 @@ using DataObject;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Service;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(x =>
+    {
+        x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        x.JsonSerializerOptions.WriteIndented = true;
+    });
 
 builder.Services.AddDbContext<FinanceAppDbContext>(options =>
     options.UseSqlServer(

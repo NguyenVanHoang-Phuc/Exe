@@ -61,5 +61,9 @@ namespace Repositories
         {
             return await _transactionDAO.GetTransactionAsyncByTransactionId(transactionId);
         }
+        public async Task<decimal> GetTotalSavedByUserInRangeAsync(int userId, DateOnly start, DateOnly end)
+        {
+            return await _transactionDAO.GetTotalSavedByUserInRangeAsync(userId, start, end);
+        }
     }
 }

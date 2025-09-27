@@ -107,5 +107,14 @@ namespace DataObject
                                  .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
         }
 
+        public async Task<decimal> GetTotalSavedByUserInRangeAsync(int userId, DateOnly start, DateOnly end)
+        {
+            return await _context.Transactions
+                .Where(t => t.UserId == userId
+                         && DateOnly.FromDateTime(t.CreatedAt) >= start
+                         && DateOnly.FromDateTime(t.CreatedAt) <= end)
+                .SumAsync(t => (decimal?)t.Amount ?? 0);
+        }
+
     }
 }

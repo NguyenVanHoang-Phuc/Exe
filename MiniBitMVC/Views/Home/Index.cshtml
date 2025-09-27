@@ -328,12 +328,22 @@
                     <form id="savingsGoalForm">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="monthlyTarget" class="form-label">Mục tiêu tiết kiệm tháng (đ)</label>
-                                <input type="number" class="form-control" id="monthlyTarget" value="@Model.SavingsGoal.MonthlyTarget" placeholder="Nhập số tiền muốn tiết kiệm">
+                                <label for="goalName" class="form-label">Tên mục tiêu</label>
+                                <input type="text" class="form-control" id="goalName"
+                                       placeholder="Ví dụ: Tiết kiệm mua laptop" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="dailyLimit" class="form-label">Giới hạn chi tiêu hàng ngày (đ)</label>
-                                <input type="number" class="form-control" id="dailyLimit" value="@Model.SavingsGoal.DailyLimit" placeholder="Nhập giới hạn chi tiêu mỗi ngày">
+                                <label for="targetAmount" class="form-label">Mục tiêu tiết kiệm tổng (đ)</label>
+                                <input type="number" class="form-control" id="targetAmount"
+                                       placeholder="Nhập số tiền muốn tiết kiệm" min="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="startDate" class="form-label">Bắt đầu từ</label>
+                                <input type="date" class="form-control" id="startDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="endDate" class="form-label">Kết thúc</label>
+                                <input type="date" class="form-control" id="endDate" required>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-3">Lưu mục tiêu</button>
@@ -341,15 +351,23 @@
 
                     <div class="mt-4" id="goalSummary" style="display: none;">
                         <div class="alert alert-info">
-                            <h6 class="alert-heading">Kế hoạch chi tiêu của bạn:</h6>
-                            <p class="mb-1">💰 Mục tiêu tiết kiệm: <strong id="targetDisplay"></strong></p>
-                            <p class="mb-1">📅 Chi tiêu tối đa mỗi ngày: <strong id="limitDisplay"></strong></p>
-                            <p class="mb-0">📊 Tiến độ tháng này: <strong id="progressDisplay"></strong></p>
+                            <h6 class="alert-heading">🎯 Mục tiêu đang active:</h6>
+                            <p class="mb-1">Tên: <strong id="activeName"></strong></p>
+                            <p class="mb-1">💰 Số tiền: <strong id="activeTarget"></strong></p>
+                            <p class="mb-1">⏱️ Thời gian: <strong id="activePeriod"></strong></p>
+                            <p class="mb-0">📊 Tiến độ: <strong id="activeProgress"></strong></p>
                         </div>
                     </div>
+
+                    <h6 class="mt-4">📜 Các mục tiêu đã qua:</h6>
+                    <ul class="list-group" id="pastGoals"></ul>
+
                 </div>
             </div>
         </div>
+
+
+
 
         <!-- Analytics Tab -->
         <div class="tab-pane fade" id="analytics" role="tabpanel">
@@ -759,30 +777,6 @@
           const targetDisplay = document.getElementById('targetDisplay');
           const limitDisplay  = document.getElementById('limitDisplay');
           const progressDisplay = document.getElementById('progressDisplay');
-
-          // ====== UI phụ: 3 thẻ info nhỏ + vòng tiến độ (render ngay dưới form) ======
-          const form = document.getElementById('savingsGoalForm');
-          const extra = document.createElement('div');
-          extra.className = 'goal-grid';
-          extra.innerHTML = `
-            <div class="goal-card">
-              <h6>Gợi ý hạn mức/ngày</h6>
-              <div class="goal-hint">Dựa trên mục tiêu tháng và số ngày còn lại.</div>
-              <div class="mt-2"><span class="goal-chip" id="chipSuggest">0đ / ngày</span></div>
-            </div>
-            <div class="goal-card">
-              <h6>Ngày còn lại trong tháng</h6>
-              <div class="goal-hint" id="daysLeftText">—</div>
-            </div>
-            <div class="goal-card">
-              <h6>Xem trước tiến độ</h6>
-              <div class="goal-preview">
-                <div class="goal-ring" id="goalRing"><span>0%</span></div>
-                <div class="goal-hint">Tiến độ ước tính so với mục tiêu đặt ra.</div>
-              </div>
-            </div>
-          `;
-          form.after(extra);
 
           const chipSuggest = document.getElementById('chipSuggest');
           const goalRing    = document.getElementById('goalRing');
@@ -1380,10 +1374,127 @@
                         alert(err.message);
                     }
                 });
-
-
-
             </script>
+
+
+            <script>
+                $(document).ready(function () {
+                    const userId = 1; // thử với userId = 1
+
+                    // Load goals khi vào tab
+                    loadGoals(userId);
+
+                    // Submit form tạo goal
+                    $("#savingsGoalForm").submit(function (e) {
+                        e.preventDefault();
+
+                        const startDate = $("#startDate").val();
+                        const endDate = $("#endDate").val();
+
+                        if (!startDate || !endDate) {
+                            alert("Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc!");
+                            return;
+                        }
+
+                        if (new Date(endDate) < new Date(startDate)) {
+                            alert("Ngày kết thúc phải sau ngày bắt đầu!");
+                            return;
+                        }
+
+                        const data = {
+                            userId: userId,
+                            name: $("#goalName").val(),
+                            targetAmount: Number($("#targetAmount").val()),
+                            currentAmount: 0,
+                            startDate: startDate,
+                            endDate: endDate,
+                            status: "open"
+                        };
+
+                        console.log("📤 Submitting goal:", data);
+
+                        $.ajax({
+                            url: "/api/goals/create",
+                            type: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify(data),
+                            success: function (res) {
+                                alert("Lưu thành công!");
+                                loadGoals(userId);
+                                $("#savingsGoalForm")[0].reset();
+                            },
+                            error: function (err) {
+                                console.error("❌ Error creating goal:", err);
+                                alert("Có lỗi khi lưu!");
+                            }
+                        });
+                    });
+
+
+                    // Hàm load goals
+                    function loadGoals(userId) {
+                         // Load active goal
+                        $.ajax({
+                            url: `/api/goals/active/${userId}`,
+                            type: "GET",
+                            success: function (res) {
+                                if (!res) {
+                                    $("#goalSummary").hide();
+                                } else {
+                                    $("#goalSummary").show();
+                                    $("#activeName").text(res.goalName ?? "");
+                                    $("#activeTarget").text((res.targetAmount ?? 0).toLocaleString("vi-VN") + "đ");
+
+                                    // hiển thị start -> end
+                                    const start = res.startDate ? new Date(res.startDate).toLocaleDateString("vi-VN") : "";
+                                    const end = res.endDate ? new Date(res.endDate).toLocaleDateString("vi-VN") : "";
+                                    $("#activePeriod").text(start && end ? `${start} → ${end}` : "");
+
+                                    $("#activeProgress").text((res.progressPercent ?? 0).toFixed(0) + "%");
+                                }
+                            },
+                            error: function () { $("#goalSummary").hide(); }
+                        });
+
+
+                        // Load all user goals
+                        $.ajax({
+                            url: `/api/goals/user/${userId}`,
+                            type: "GET",
+                            success: function (goals) {
+                                $("#pastGoals").empty();
+                                if (!goals || goals.length === 0) {
+                                    $("#pastGoals").append(`<li class="list-group-item">Chưa có mục tiêu nào</li>`);
+                                } else {
+                                    const today = new Date();
+                                    goals.forEach(g => {
+                                        const endDate = g.endDate ? new Date(g.endDate) : null;
+                                        if (endDate && endDate < today) { // past goal
+                                            const startDate = g.startDate ? new Date(g.startDate).toLocaleDateString("vi-VN") : "";
+                                            const endStr = endDate.toLocaleDateString("vi-VN");
+                                            $("#pastGoals").append(`
+                                                <li class="list-group-item">
+                                                    🎯 <strong>${g.name}</strong>
+                                                    - 💰 ${(g.targetAmount ?? 0).toLocaleString("vi-VN")}đ
+                                                    - ⏱️ ${startDate} → ${endStr}
+                                                </li>
+                                            `);
+                                        }
+                                    });
+                                    if ($("#pastGoals").children().length === 0) {
+                                        $("#pastGoals").append(`<li class="list-group-item">Chưa có mục tiêu nào</li>`);
+                                    }
+                                }
+                            },
+                            error: function () {
+                                $("#pastGoals").empty().append(`<li class="list-group-item">Không thể load goals!</li>`);
+                            }
+                        });
+                    }
+                });
+            </script>
+
+
 }
 
 <link href="~/css/MinibitCharacter.css" rel="stylesheet" />

@@ -18,5 +18,6 @@ namespace Repositories
         Task<decimal> GetTodaySpendingByUserIdAsync(int userId);
         Task<decimal> GetMonthlySavingByUserIdAsync(int userId);
         Task<Transaction> GetTransactionAsyncByTransactionId(int transactionId);
+        Task<decimal> GetTotalSavedByUserInRangeAsync(int userId, DateOnly start, DateOnly end);
     }
 }

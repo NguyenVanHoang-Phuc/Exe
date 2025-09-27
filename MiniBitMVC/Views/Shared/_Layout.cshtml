@@ -111,6 +111,19 @@
                 </div>
             </nav>
 
+            <div class="container my-3">
+                <h5>Tiến độ tiết kiệm tháng này</h5>
+                <div class="d-flex align-items-center">
+                    <!-- Thanh tiến độ -->
+                    <div style="flex:1; height: 25px; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; position: relative;">
+                        <div id="finance-progress-bar" style="height: 100%; width: 0%; background-color: green;"></div>
+                    </div>
+                    <!-- Text bên phải -->
+                    <span id="finance-status-text" style="margin-left: 10px; font-weight: bold; white-space: nowrap;"></span>
+                </div>
+            </div>
+
+
             <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner"> 
                     <div class="carousel-item active">
@@ -187,6 +200,47 @@
     <script src="~/lib/owlcarousel/owl.carousel.min.js"></script>
     <script src="~/lib/lightbox/js/lightbox.min.js"></script>
     <script src="~/lib/easing/easing.min.js"></script>
+
+    <script>
+        async function loadFinanceSummary(userId) {
+            try {
+                const res = await fetch(`/api/goals/budget/${userId}`);
+                const data = await res.json();
+                console.log("Data từ API:", data);
+
+                const budget = data.budgetMonth ?? 0;
+                let netBalance = data.spentAmount ?? 0;
+
+
+                const percent = budget > 0 ? (netBalance / budget) * 100 : 0;
+
+                const progressBar = document.getElementById("finance-progress-bar");
+                const statusText = document.getElementById("finance-status-text");
+
+                // Cập nhật width thanh
+                progressBar.style.width = `${Math.min(Math.max(percent, 0), 100)}%`;
+
+                // 3 mức trạng thái
+                if (netBalance < 0) {
+                    progressBar.style.backgroundColor = "red";
+                    statusText.textContent = `Chi tiêu vượt! Số dư: ${netBalance.toLocaleString()} / Ngân sách: ${budget.toLocaleString()} VND`;
+                } else if (percent < 50) {
+                    progressBar.style.backgroundColor = "orange";
+                    statusText.textContent = `Tiết kiệm bình thường. Số dư: ${netBalance.toLocaleString()} / Ngân sách: ${budget.toLocaleString()} VND`;
+                } else {
+                    progressBar.style.backgroundColor = "green";
+                    statusText.textContent = `Tiết kiệm tốt! Số dư: ${netBalance.toLocaleString()} / Ngân sách: ${budget.toLocaleString()} VND`;
+                }
+
+            } catch (err) {
+                console.error("Không thể load finance summary:", err);
+            }
+        }
+
+        // Gọi sau khi DOM sẵn sàng
+        document.addEventListener("DOMContentLoaded", () => loadFinanceSummary(1));
+    </script>
+
 
     <script>
                         (function ($) {

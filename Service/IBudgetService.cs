@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BusinessObject.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +9,6 @@ namespace Service
 {
     public interface IBudgetService
     {
+        Task<Budget?> GetBudgetByUserIdAsync(int userId);
     }
 }

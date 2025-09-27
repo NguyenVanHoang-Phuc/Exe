@@ -69,5 +69,10 @@ namespace Service
             await _transactionRepository.UpdateTransactionAsync(transaction);
             return true;
         }
+
+        public async Task<decimal> GetTotalSavedByUserInRangeAsync(int userId, DateOnly start, DateOnly end)
+        {
+            return await _transactionRepository.GetTotalSavedByUserInRangeAsync(userId, start, end);
+        }
     }
 }

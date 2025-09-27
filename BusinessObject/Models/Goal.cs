@@ -15,9 +15,15 @@ public partial class Goal
 
     public decimal CurrentAmount { get; set; }
 
-    public DateOnly? Deadline { get; set; }
+    public DateOnly StartDate { get; set; }
+
+    public DateOnly? EndDate { get; set; }
+
+    public DateTime CreatedAt { get; set; }
 
     public string? Status { get; set; }
+
+    public virtual ICollection<Budget> Budgets { get; set; } = new List<Budget>();
 
     public virtual User User { get; set; } = null!;
 }
