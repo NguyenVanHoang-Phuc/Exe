@@ -23,44 +23,50 @@ public class PaymentController : ControllerBase
         _userService = userService;
         _logger = logger;
     }
-
     [HttpPost("payos_transfer_handler")]
-    public async Task<IActionResult> payOSTransferHandler(WebhookType body)
+    public async Task<IActionResult> payOSTransferHandler([FromBody] WebhookData data)
     {
         try
         {
-            WebhookData data = _payOS.verifyPaymentWebhookData(body);
+            // Log dữ liệu nhận được từ webhook để kiểm tra
+            _logger.LogInformation("Webhook Data received: {@WebhookData}", data);
 
-            _logger.LogInformation("Webhook Data: {WebhookData}", data);
-
-            if (data.description == "Ma giao dich thu nghiem" || data.description == "VQRIO123")
-            {
-                return Ok(new Response(0, "Ok", null));
-            }
+            // Lấy UserId từ session
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null)
             {
                 _logger.LogWarning("Không tìm thấy UserId trong session.");
                 return Unauthorized("Không tìm thấy UserId trong session.");
             }
+
+            // Tạo đối tượng Payment từ dữ liệu webhook
             var payment = new Payment
             {
-                UserId = userId.Value,
-                Amount = data.amount,
-                Currency = data.currency,
-                PaymentDate = DateTime.UtcNow,
-                Method = "payOS",
+                UserId = userId.Value,           // Lấy UserId từ session
+                Amount = data.amount,            // Số tiền thanh toán
+                Currency = data.currency,        // Loại tiền tệ
+                PaymentDate = DateTime.UtcNow,   // Ngày thanh toán
+                Method = "payOS",                // Phương thức thanh toán
             };
-            _logger.LogInformation("Thanh toán được tạo: {PaymentAmount} {PaymentCurrency}", payment.Amount, payment.Currency);
+
+            // Log thanh toán được tạo
+            _logger.LogInformation("Thanh toán được tạo: {PaymentAmount} {PaymentCurrency} cho UserId: {UserId}",
+                payment.Amount, payment.Currency, userId);
+
+            // Lưu thanh toán vào database
             await _paymentService.SavePaymentAsync(payment);
+
+            // Log thông báo thanh toán đã được lưu
             _logger.LogInformation("Thanh toán đã được lưu thành công.");
-            return Ok(new Response(0, "Ok", null));
+
+            return Ok(new Response(0, "Payment processed successfully.", null));
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
-            return Ok(new Response(-1, "fail", null));
+            // Log lỗi nếu có
+            _logger.LogError(e, "Error occurred while processing PayOS webhook.");
+            return StatusCode(500, "Internal server error");
         }
-
     }
+
 }

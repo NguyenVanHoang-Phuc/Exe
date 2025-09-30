@@ -18,6 +18,6 @@ namespace Service
 
         public Task<bool> HasActiveAsync(int userId) => _userSubscriptionRepository.HasActiveAsync(userId);
 
-        public Task UpsertActivateAsync(int userId, int planId, int months) => _userSubscriptionRepository.UpsertActivateAsync(userId, planId, months);
+        public async Task UpsertActivateAsync(int userId, int planId, int months, decimal amount) => await _userSubscriptionRepository.UpsertActivateAsync(userId, planId, months, amount);
     }
 }

@@ -1,7 +1,9 @@
 ﻿using BusinessObject.Models;
 using DataObject;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
+using Net.payOS;
 using Repositories;
 using Service;
 using System.Text.Json.Serialization;
@@ -66,6 +68,11 @@ builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 // PayOS config
+IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+
+PayOS payOS = new PayOS(configuration["Environment:PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find environment"),
+                    configuration["Environment:PAYOS_API_KEY"] ?? throw new Exception("Cannot find environment"),
+                    configuration["Environment:PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find environment"));
 
 // Auth
 builder.Services.AddAuthentication(options =>
@@ -80,6 +87,11 @@ builder.Services.AddAuthentication(options =>
     opt.ExpireTimeSpan = TimeSpan.FromDays(14);
     opt.Cookie.HttpOnly = true;
     opt.Cookie.SameSite = SameSiteMode.Lax;
+})
+
+.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+{
+    
 });
 
 builder.Services.AddAuthorization();
@@ -90,7 +102,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(100);
 });
 
-//builder.Services.AddSingleton(payOS);
+builder.Services.AddSingleton(payOS);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
