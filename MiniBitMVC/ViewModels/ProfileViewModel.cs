@@ -2,30 +2,20 @@
 {
     public class ProfileViewModel
     {
+        // Thông tin cơ bản từ User
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public bool IsPremium { get; set; }
+        public bool IsPremium { get; set; }  // Trạng thái Premium (được lấy từ UserSubscription)
 
-        // Thông tin gói Premium
-        public string PremiumPlanName { get; set; } = string.Empty; // Tên gói Premium
-        public decimal PremiumPrice { get; set; } // Giá của gói
-        public int PremiumDurationMonths { get; set; } // Thời gian gói (số tháng)
-        public string? PremiumFeatures { get; set; } // Tính năng của gói Premium
-
-        // Các thông tin khác liên quan đến cá nhân và tài chính
+        // Các thông tin cá nhân (User)
         public string Phone { get; set; } = string.Empty;
         public string Dob { get; set; } = string.Empty;
         public string Gender { get; set; } = string.Empty;
 
-        // Tài chính
-        public string Currency { get; set; } = "VND"; // Mặc định là VND
-        public string Income { get; set; } = string.Empty;
-        public string SpendMethod { get; set; } = string.Empty;
-
-        // Dữ liệu cá nhân / insights
-        public int TxCount { get; set; }
-        public int Months { get; set; }
-        public string Goal { get; set; } = string.Empty;
-        public string Budget { get; set; } = string.Empty;
+        // Dữ liệu cá nhân / insights (Tính toán từ Transaction, Goal, Budget)
+        public int TxCount { get; set; }  // Số lượng giao dịch
+        public int Months { get; set; }   // Số tháng đã sử dụng
+        public string Goal { get; set; } = string.Empty;  // Mục tiêu hiện tại
+        public string Budget { get; set; } = string.Empty;  // Ngân sách hiện tại
     }
 }

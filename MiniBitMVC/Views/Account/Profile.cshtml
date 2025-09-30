@@ -1,4 +1,5 @@
-﻿@{
+﻿@model MiniBitMVC.ViewModels.ProfileViewModel
+@{
     ViewData["Title"] = "Hồ sơ cá nhân";
     Layout = "_Layout";
 }
@@ -53,48 +54,9 @@
             </div>
         </div>
 
-        <!-- 2) Thông tin tài chính (tùy chọn) + 3) Dữ liệu cá nhân -->
-        <div class="d-flex flex-column gap-4">
-
-            <!-- Tài chính -->
-            <div class="profile-card">
-                <div class="card-header"><i class="fas fa-wallet me-2"></i>Thông tin tài chính (tùy chọn)</div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Tiền tệ mặc định</label>
-                            <select id="pfCurrency" class="form-input">
-                                <option value="VND">VND (₫)</option>
-                                <option value="USD">USD ($)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Nguồn thu nhập chính</label>
-                            <select id="pfIncome" class="form-input">
-                                <option value="">Chưa chọn</option>
-                                <option value="salary">Lương</option>
-                                <option value="business">Kinh doanh</option>
-                                <option value="freelance">Tự do</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Phương thức chi tiêu chính</label>
-                            <select id="pfSpendMethod" class="form-input">
-                                <option value="">Chưa chọn</option>
-                                <option value="cash">Tiền mặt</option>
-                                <option value="card">Thẻ</option>
-                                <option value="ewallet">Ví điện tử</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <button id="btnSaveFinance" class="login-btn" style="width:auto;">Lưu cài đặt tài chính</button>
-                            <span id="toastFinance" class="alert alert-success py-1 px-2 ms-2 d-none">Đã lưu!</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dữ liệu cá nhân (insights) -->
+        @if (Model.IsPremium)
+        {
+            <!-- 2) Thông tin tài chính (tùy chọn) + 3) Dữ liệu cá nhân -->
             <div class="profile-card">
                 <div class="card-header">
                     <i class="fas fa-database me-2"></i>Dữ liệu cá nhân
@@ -126,7 +88,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
 </div>
 
