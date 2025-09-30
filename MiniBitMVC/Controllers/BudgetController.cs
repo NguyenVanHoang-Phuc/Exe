@@ -20,16 +20,21 @@ namespace MiniBitMVC.Controllers
         }
 
         // Lấy thông tin ngân sách tháng này của user
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetBudgetSummary(int userId)
+        [HttpGet]
+        public async Task<IActionResult> GetBudgetSummary()
         {
-            var budget = await _budgetService.GetBudgetByUserIdAsync(1);
+            int? sessionUserId = HttpContext.Session.GetInt32("UserId");
+            if (sessionUserId == null)
+                return Unauthorized(new { message = "Chưa đăng nhập" });
+            int userId = sessionUserId.Value;
+
+            var budget = await _budgetService.GetBudgetByUserIdAsync(userId);
 
             var today = DateOnly.FromDateTime(DateTime.Now);
             var startOfMonth = new DateOnly(today.Year, today.Month, 1);
 
             // Tổng chi tiêu/thanh toán tháng này
-            var spent = await _traService.GetMonthlySpendingByUserIdAsync(1);
+            var spent = await _traService.GetMonthlySpendingByUserIdAsync(userId);
 
             return Ok(new BudgetSummaryDto
             {
@@ -42,8 +47,12 @@ namespace MiniBitMVC.Controllers
         [HttpPost("add-range")]
         public async Task<IActionResult> AddBudgets([FromBody] AddBudgetsRequest request)
         {
+            int? sessionUserId = HttpContext.Session.GetInt32("UserId");
+            if (sessionUserId == null)
+                return Unauthorized(new { message = "Chưa đăng nhập" });
+            int userId = sessionUserId.Value;
 
-            Console.WriteLine($"UserId={request.UserId}, Amount={request.AmountLimit}, Start={request.StartMonth}, End={request.EndMonth}, Year={request.Year}");
+            Console.WriteLine($"UserId={userId}, Amount={request.AmountLimit}, Start={request.StartMonth}, End={request.EndMonth}, Year={request.Year}");
 
             if (request.StartMonth > request.EndMonth)
                 return BadRequest(new { message = "Tháng bắt đầu phải <= tháng kết thúc" });
@@ -53,7 +62,7 @@ namespace MiniBitMVC.Controllers
             {
                 budgets.Add(new Budget
                 {
-                    UserId = 1,
+                    UserId = userId,
                     Month = m,
                     Year = request.Year,
                     AmountLimit = request.AmountLimit,
@@ -65,6 +74,7 @@ namespace MiniBitMVC.Controllers
 
             return Ok(new { message = "Thêm ngân sách thành công", count = budgets.Count });
         }
+
 
     }
 }
