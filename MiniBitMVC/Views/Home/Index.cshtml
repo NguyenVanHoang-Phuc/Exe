@@ -1,6 +1,8 @@
 ﻿@model MiniBitMVC.Models.ExpenseModels.DashboardViewModel
 @{
     ViewData["Title"] = "Trang chủ";
+    var userIdFromSession = Context.Session.GetInt32("UserId") ?? 0;
+    var isPremium = Context.Session.GetInt32("IsPremium") ?? 0;
 }
 
 <!-- MiniBit Character -->
@@ -597,7 +599,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script>
                 const categories = @Html.Raw(Json.Serialize(Model.Categories));
-                const userId = 1; // 👈 Tạm hardcode userId (sau này thay bằng login thực)
+                const userId = @userIdFromSession;
+                const isPremium = @isPremium;
     </script>
     <script>
         // Initialize data from server
@@ -606,55 +609,55 @@
         window.isPremium = @Html.Raw(Json.Serialize(Model.IsPremium));
     </script>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Progress bar hiệu ứng
-            const todayProgress = document.getElementById("todayProgress");
-            if (todayProgress) {
-                todayProgress.style.width = "0%";
-                setTimeout(() => { todayProgress.style.width = "65%"; }, 200);
-            }
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
 
-            const monthlyProgress = document.getElementById("monthlyProgress");
-            if (monthlyProgress) {
-                monthlyProgress.style.width = "0%";
-                setTimeout(() => { monthlyProgress.style.width = "45%"; }, 200);
-            }
+                    // Character message ngẫu nhiên
+                    const messages = [
+                        "Hãy ghi chi tiêu để quản lý ví tiền tốt hơn! 💡",
+                        "Đừng quên đặt mục tiêu tiết kiệm nhé! 🎯",
+                        "Bạn có thể giảm 10% ăn ngoài để tiết kiệm nhiều hơn 🍜",
+                        "Tiết kiệm nhỏ, thành công lớn 💚"
+                    ];
+                    const characterMessage = document.getElementById("characterMessage");
+                    if (characterMessage) {
+                        const random = Math.floor(Math.random() * messages.length);
+                        characterMessage.textContent = messages[random];
+                    }
 
-            // Character message ngẫu nhiên
-            const messages = [
-                "Hãy ghi chi tiêu để quản lý ví tiền tốt hơn! 💡",
-                "Đừng quên đặt mục tiêu tiết kiệm nhé! 🎯",
-                "Bạn có thể giảm 10% ăn ngoài để tiết kiệm nhiều hơn 🍜",
-                "Tiết kiệm nhỏ, thành công lớn 💚"
-            ];
-            const characterMessage = document.getElementById("characterMessage");
-            if (characterMessage) {
-                const random = Math.floor(Math.random() * messages.length);
-                characterMessage.textContent = messages[random];
-            }
+                    // Tab smooth scroll (Bootstrap có sẵn, nhưng thêm animation)
+                    const triggerTabList = document.querySelectorAll('#mainTabs button');
+                    triggerTabList.forEach(tab => {
+                        tab.addEventListener('shown.bs.tab', (event) => {
+                            document.querySelector(event.target.dataset.bsTarget)
+                                .scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        });
+                    });
 
-            // Tab smooth scroll (Bootstrap có sẵn, nhưng thêm animation)
-            const triggerTabList = document.querySelectorAll('#mainTabs button');
-            triggerTabList.forEach(tab => {
-                tab.addEventListener('shown.bs.tab', (event) => {
-                    document.querySelector(event.target.dataset.bsTarget)
-                        .scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Premium content
+                    const premiumPromo = document.getElementById("premiumPromo");
+                    const premiumContent = document.getElementById("premiumContent");
+
+                    if (premiumPromo && premiumContent) {
+                        if (isPremium === 1) {
+                            // User là Premium → hiển thị nội dung, ẩn promo
+                            premiumPromo.style.display = "none";
+                            premiumContent.style.display = "block";
+                        } else {
+                            // User không Premium → hiển thị promo, ẩn nội dung
+                            premiumPromo.style.display = "block";
+                            premiumContent.style.display = "none";
+                        }
+
+                        // Click nâng cấp Premium (demo)
+                        premiumPromo.querySelector("button")?.addEventListener("click", () => {
+                            premiumPromo.style.display = "none";
+                            premiumContent.style.display = "block";
+                        });
+                    }
                 });
-            });
+            </script>
 
-            // Premium toggle (chỉ UI demo)
-            const premiumPromo = document.getElementById("premiumPromo");
-            const premiumContent = document.getElementById("premiumContent");
-            if (premiumPromo && premiumContent) {
-                // demo: click nút nâng cấp → ẩn promo, hiện content
-                premiumPromo.querySelector("button")?.addEventListener("click", () => {
-                    premiumPromo.style.display = "none";
-                    premiumContent.style.display = "block";
-                });
-            }
-        });
-    </script>
 
                 <script>
                     async function loadAnalytics(userId) {
@@ -719,8 +722,8 @@
                     return '#' + Math.floor(Math.random()*16777215).toString(16);
                 }
 
-                // Load cho userId = 1
-                loadAnalytics(1);
+                
+                loadAnalytics(userId;
             </script>
 
 
@@ -1071,7 +1074,7 @@
 
             <script>
                 $(document).ready(function () {
-                    const userId = 1; // thử với userId = 1
+                    const userId = @userIdFromSession; 
 
                     // Load goals khi vào tab
                     loadGoals(userId);
@@ -1125,9 +1128,9 @@
 
                     // Hàm load goals
                     function loadGoals(userId) {
-                         // Load active goal
+                        // Load active goal
                         $.ajax({
-                            url: `/api/goals/active/${userId}`,
+                            url: `/api/goals/active`, // bỏ userId
                             type: "GET",
                             success: function (res) {
                                 if (!res) {
@@ -1137,7 +1140,6 @@
                                     $("#activeName").text(res.goalName ?? "");
                                     $("#activeTarget").text((res.targetAmount ?? 0).toLocaleString("vi-VN") + "đ");
 
-                                    
                                     const start = res.startDate ? new Date(res.startDate).toLocaleDateString("vi-VN") : "";
                                     const end = res.endDate ? new Date(res.endDate).toLocaleDateString("vi-VN") : "";
                                     $("#activePeriod").text(start && end ? `${start} → ${end}` : "");
@@ -1148,10 +1150,9 @@
                             error: function () { $("#goalSummary").hide(); }
                         });
 
-
                         // Load all user goals
                         $.ajax({
-                            url: `/api/goals/user/${userId}`,
+                            url: `/api/goals/user`, // bỏ userId
                             type: "GET",
                             success: function (goals) {
                                 $("#pastGoals").empty();
@@ -1192,7 +1193,7 @@
                     e.preventDefault();
 
                     const data = {
-                        userId: 1,
+                        userId: userId,
                         amountLimit: parseFloat(document.getElementById("amountLimit").value),
                         startMonth: parseInt(document.getElementById("startMonth").value),
                         endMonth: parseInt(document.getElementById("endMonth").value),

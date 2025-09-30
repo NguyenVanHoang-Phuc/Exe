@@ -68,7 +68,7 @@ builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 // PayOS config
-IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.Development.json").Build();
 
 PayOS payOS = new PayOS(configuration["Environment:PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find environment"),
                     configuration["Environment:PAYOS_API_KEY"] ?? throw new Exception("Cannot find environment"),

@@ -18,16 +18,24 @@ namespace MiniBitMVC.Controllers
             _traService = traService;
         }
 
+        private int? GetSessionUserId()
+        {
+            return HttpContext.Session.GetInt32("UserId");
+        }
+
         // Tạo goal
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] GoalCreateDto goalDto)
         {
+            var userId = GetSessionUserId();
+            if (userId == null) return Unauthorized("Chưa đăng nhập.");
+
             if (goalDto.EndDate.HasValue && goalDto.StartDate.HasValue && goalDto.EndDate < goalDto.StartDate)
                 return BadRequest("EndDate phải sau StartDate");
 
             var goal = new Goal
             {
-                UserId = goalDto.UserId,
+                UserId = userId.Value,
                 Name = goalDto.Name,
                 TargetAmount = goalDto.TargetAmount,
                 CurrentAmount = goalDto.CurrentAmount,
@@ -55,10 +63,13 @@ namespace MiniBitMVC.Controllers
         }
 
         // Lấy tất cả goals của user
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetGoalsByUser(int userId)
+        [HttpGet("user")]
+        public async Task<IActionResult> GetGoalsByUser()
         {
-            var goals = await _goalService.GetGoalsByUserAsync(userId);
+            var userId = GetSessionUserId();
+            if (userId == null) return Unauthorized("Chưa đăng nhập.");
+
+            var goals = await _goalService.GetGoalsByUserAsync(userId.Value);
 
             var result = goals.Select(g => new GoalDto
             {
@@ -79,15 +90,21 @@ namespace MiniBitMVC.Controllers
         [HttpDelete("{goalId}")]
         public async Task<IActionResult> Delete(int goalId)
         {
+            var userId = GetSessionUserId();
+            if (userId == null) return Unauthorized("Chưa đăng nhập.");
+
             await _goalService.DeleteGoalAsync(goalId);
             return NoContent();
         }
 
         // Lấy goal active + tiến độ
-        [HttpGet("active/{userId}")]
-        public async Task<IActionResult> GetActiveGoal(int userId)
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActiveGoal()
         {
-            var result = await _goalService.GetActiveGoalWithProgressAsync(userId);
+            var userId = GetSessionUserId();
+            if (userId == null) return Unauthorized("Chưa đăng nhập.");
+
+            var result = await _goalService.GetActiveGoalWithProgressAsync(userId.Value);
             if (result == null) return Ok(null); // JS hide goalSummary nếu null
 
             var (goal, savedAmount, progressPercent) = result.Value;
