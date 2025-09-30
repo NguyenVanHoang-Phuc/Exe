@@ -1,4 +1,13 @@
-﻿<div class="modal fade" id="premiumModal" tabindex="-1" aria-hidden="true">
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    // Lấy anti-forgery token để gửi kèm AJAX
+    var token = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+
+<link href="~/css/Auth.css" rel="stylesheet" />
+
+<div class="modal fade" id="premiumModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
@@ -35,12 +44,56 @@
                         <div class="alert alert-info small">
                             Chỉ <strong>29.000đ/tháng</strong> – hủy bất cứ lúc nào
                         </div>
-                        <button class="btn btn-premium btn-lg w-100">
-                            <i class="fas fa-credit-card me-2"></i>Mua ngay
-                        </button>
+                        <form action="@Url.Action("Checkout", "Checkout")" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="planId" value="premium-monthly" />
+                            <input type="hidden" name="couponCode" value="null" />
+                            <button type="submit" class="btn btn-premium btn-lg w-100" id="buyPremiumBtn">
+                                <i class="fas fa-credit-card me-2"></i>Mua ngay
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    (() => {
+        const buyBtn = document.getElementById('buyPremiumBtn');
+        const modalEl = document.getElementById('premiumModal');
+        const navbarBtn = document.querySelector('[data-bs-target="#premiumModal"]');
+        const premiumText = document.getElementById('premiumText');
+
+        // Khi trang load, kiểm tra trạng thái Premium
+        fetch('@Url.Action("Status", "Premium")', { credentials: 'same-origin' })
+            .then(r => r.ok ? r.json() : { isPremium: false })
+            .then(d => {
+                if (d?.isPremium) {
+                    afterPremiumUI();
+                }
+            }).catch(() => {});
+
+        function afterPremiumUI() {
+            if (premiumText) premiumText.textContent = 'Premium';
+            if (navbarBtn) {
+                navbarBtn.classList.remove('btn-warning');
+                navbarBtn.classList.add('btn-outline-secondary');
+                navbarBtn.removeAttribute('data-bs-toggle');
+                navbarBtn.removeAttribute('data-bs-target');
+            }
+        }
+
+        // Hàm hiển thị thông báo Toast
+        function showToast(message, isError) {
+            const el = document.createElement('div');
+            el.className = 'position-fixed top-0 start-50 translate-middle-x mt-3 alert ' + (isError ? 'alert-danger' : 'alert-success');
+            el.style.zIndex = 1080;
+            el.textContent = message;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2000);
+        }
+    })();
+</script>
+

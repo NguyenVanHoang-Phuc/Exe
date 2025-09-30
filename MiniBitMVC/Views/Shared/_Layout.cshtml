@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,7 +12,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Custom CSS -->
     <link href="~/css/minibit.css" rel="stylesheet" asp-append-version="true" />
@@ -30,51 +32,75 @@
 
     @RenderSection("PageStyles", required: false)
 </head>
+
 <body>
-    <!-- Spinner End -->
+    @{
+    var signedIn = User?.Identity?.IsAuthenticated ?? false;
+    var userName = User?.Identity?.Name ?? "Tài khoản";
+
+    // Premium theo Role/Claim (không cần DI)
+    var isPremium =
+    (User?.IsInRole("Premium") ?? false) ||
+    (User?.HasClaim("is_premium","true") ?? false) ||
+    (User?.HasClaim("IsPremium","true") ?? false);
+
+    // Số thông báo chưa đọc (controller có thể set ViewBag.UnreadCount; mặc định 0)
+    var unread = (int?)ViewBag.UnreadCount ?? 0;
+    }
     <!-- Header Start -->
     <header class="minibit-header">
         <div class="container-fluid p-0">
             <!-- Thêm navbar-dark bg-dark để hiện toggler icon -->
             <nav class="navbar navbar-expand-lg navbar-light bg-white px-lg-5 minibit-header-v2 sticky-top">
-                <a class="navbar-brand d-flex align-items-center" href="@Url.Action("Index", "Home")">
+                <a class="navbar-brand d-flex align-items-center" href="@Url.Action(" Index", "Home" )">
                     <img src="~/images/LogoMiniBit.png" alt="MiniBit" class="minibit-logo me-3">
                     <div>
                         <h1 class="minibit-title mb-0">MINIBIT</h1>
                         <small class="minibit-subtitle">Quản lý ví – cực easy</small>
                     </div>
                 </a>
-                <button class="navbar-toggler me-4" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler me-4" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false"
+                    aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <ul class="navbar-nav mx-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="@Url.Action("HomePage", "Account")">
+                            <a class="nav-link" href="@Url.Action(" HomePage", "Account" )">
                                 <i class="fas fa-home me-1"></i>Trang chủ
                             </a>
                         </li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i class="fas fa-wallet me-1"></i>Chi tiêu</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#goals"><i class="fas fa-bullseye me-1"></i>Mục tiêu</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#analytics"><i class="fas fa-chart-line me-1"></i>Phân tích</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i
+                                    class="fas fa-wallet me-1"></i>Chi tiêu</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#goals"><i class="fas fa-bullseye me-1"></i>Mục
+                                tiêu</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#analytics"><i
+                                    class="fas fa-chart-line me-1"></i>Phân tích</a></li>
                     </ul>
-
                     <div class="d-flex align-items-center gap-3">
-                        <!-- Notifications (bọc đúng .dropdown) -->
+                        @if (signedIn)
+                        {
+                        <!-- Notifications -->
                         <div class="dropdown">
-                            <button class="notification-bell position-relative dropdown-toggle" id="notificationBell" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="notification-bell position-relative dropdown-toggle" id="notificationBell"
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-bell"></i>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge">0</span>
+                                <!-- Hiện badge cả khi = 0 -->
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    id="notificationBadge">@unread</span>
                                 <span class="visually-hidden">Thông báo</span>
                             </button>
-                            <div class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificationBell" id="notificationDropdown" style="min-width: 18rem;">
+                            <div class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificationBell"
+                                id="notificationDropdown" style="min-width: 18rem;">
                                 <div class="dropdown-header border-bottom py-2 px-3">
                                     <h6 class="mb-0">Thông báo</h6>
                                 </div>
                                 <div class="notification-list" id="notificationList">
                                     <div class="dropdown-item-text text-center text-muted py-3">
-                                        Không có thông báo mới
+                                        @(unread > 0 ? "Bạn có thông báo chưa đọc" : "Không có thông báo mới")
                                     </div>
                                 </div>
                             </div>
@@ -82,32 +108,68 @@
 
                         <!-- User Menu -->
                         <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user me-1"></i>Tài khoản
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user me-1"></i>@userName
+                                @if (Context.Session.GetInt32("IsPremium") == 1)
+                                {
+                                <span class="badge bg-warning text-dark ms-2">
+                                    <i class="fas fa-crown me-1"></i>Premium
+                                </span>
+                                }
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Cài đặt</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Cài đặt</a>
+                                </li>
                                 <li>
                                     <a class="dropdown-item"
-                                       href='@Url.Action("FAQ", "Home", new { tab = "faq" })#pane-faq'>
+                                        href='@Url.Action("FAQ","Home", new { tab = "faq" })#pane-faq'>
                                         <i class="fas fa-question-circle me-2"></i>Hỗ trợ
                                     </a>
                                 </li>
-
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <!-- Khuyến nghị: Logout dùng POST -->
+                                    <form method="post" action='@Url.Action("Logout","Account")' class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button class="dropdown-item" type="submit">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
                             </ul>
                         </div>
 
-                        <!-- Premium Button -->
-                        <button class="btn btn-warning text-dark"
-                                data-bs-toggle="modal"
-                                data-bs-target="#premiumModal">
+                        <!-- Premium -->
+                        @if (!isPremium)
+                        {
+                        <button class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#premiumModal">
                             <i class="fas fa-crown me-2"></i>
                             <span id="premiumText">Nâng cấp Premium</span>
                             <small class="d-block">29k/tháng</small>
                         </button>
+                        }
+                        else
+                        {
+                        <a class="btn btn-warning text-dark disabled" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-crown me-2"></i> Premium
+                        </a>
+                        }
+                        }
+                        else
+                        {
+                        <!-- CHƯA ĐĂNG NHẬP: chỉ Login / Register -->
+                        <a class="btn btn-outline-primary" href='@Url.Action("Login","Account")'>
+                            <i class="fas fa-right-to-bracket me-1"></i> Đăng nhập
+                        </a>
+                        <a class="btn btn-primary" href='@Url.Action("SignUp","Account")'>
+                            <i class="fas fa-user-plus me-1"></i> Đăng ký
+                        </a>
+                        }
                     </div>
+
                 </div>
             </nav>
 
@@ -126,7 +188,7 @@
 
 
             <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
-                <div class="carousel-inner"> 
+                <div class="carousel-inner">
                     <div class="carousel-item active">
                         <img class="w-100" src="~/images/background.jpg" alt="Image">
                         <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
@@ -136,7 +198,8 @@
                                     <h1 class="display-1">Quản lý chi tiêu dễ dàng</h1>
                                 </div>
                             </div>
-                            <p class="fs-5 mb-5">Kiểm soát tài chính thông minh.<br> Theo dõi thu nhập, chi tiêu, ngân sách chỉ với vài cú chạm.</p>
+                            <p class="fs-5 mb-5">Kiểm soát tài chính thông minh.<br> Theo dõi thu nhập, chi tiêu, ngân
+                                sách chỉ với vài cú chạm.</p>
                             <a href="#" class="btn btn-outline-primary border-2 py-3 px-5">Bắt đầu ngay</a>
                         </div>
                     </div>
@@ -149,16 +212,19 @@
                                     <h1 class="display-1">Báo cáo trực quan</h1>
                                 </div>
                             </div>
-                            <p class="fs-5 mb-5">Hiểu rõ thói quen chi tiêu.<br> Biểu đồ và thống kê giúp bạn đưa ra quyết định tài chính tốt hơn..</p>
+                            <p class="fs-5 mb-5">Hiểu rõ thói quen chi tiêu.<br> Biểu đồ và thống kê giúp bạn đưa ra
+                                quyết định tài chính tốt hơn..</p>
                             <a href="#" class="btn btn-outline-primary border-2 py-3 px-5">Khám phá ngay</a>
                         </div>
                     </div>
                 </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel" data-bs-slide="prev">
+                <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel"
+                    data-bs-slide="prev">
                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                     <span class="visually-hidden">Previous</span>
                 </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#header-carousel" data-bs-slide="next">
+                <button class="carousel-control-next" type="button" data-bs-target="#header-carousel"
+                    data-bs-slide="next">
                     <span class="carousel-control-next-icon" aria-hidden="true"></span>
                     <span class="visually-hidden">Next</span>
                 </button>
@@ -174,16 +240,20 @@
     <!-- Footer Start -->
     <div class="container-fluid bg-dark text-light footer py-5">
         <div class="container text-center py-5">
-            <a href="@Url.Action("Index", "Home")">
+            <a href="@Url.Action(" Index", "Home" )">
                 <h1 class="display-4 mb-3 text-white text-uppercase">
                     <i class="fa-regular fa-face-smile me-1"></i>Minibit
                 </h1>
             </a>
             <div class="d-flex justify-content-center mb-4">
-                <a class="btn btn-lg-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-x-twitter"></i></a>
-                <a class="btn btn-lg-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-facebook-f"></i></a>
-                <a class="btn btn-lg-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-youtube"></i></a>
-                <a class="btn btn-lg-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a class="btn btn-lg-square btn-outline-primary border-2 m-1" href="#"><i
+                        class="fab fa-x-twitter"></i></a>
+                <a class="btn btn-lg-square btn-outline-primary border-2 m-1" href="#"><i
+                        class="fab fa-facebook-f"></i></a>
+                <a class="btn btn-lg-square btn-outline-primary border-2 m-1" href="#"><i
+                        class="fab fa-youtube"></i></a>
+                <a class="btn btn-lg-square btn-outline-primary border-2 m-1" href="#"><i
+                        class="fab fa-linkedin-in"></i></a>
             </div>
         </div>
     </div>
@@ -203,6 +273,7 @@
     <script src="~/lib/easing/easing.min.js"></script>
 
     <script>
+        (function ($) {
         async function loadFinanceSummary(userId) {
             try {
                 const res = await fetch(`/api/budget/${userId}`);
@@ -267,8 +338,8 @@
                 }
             });
             $('.back-to-top').click(function () {
-                $('html, body').animate({scrollTop: 0}, 1500, 'easeInOutExpo');
-                return false;
+                $('html, body').animate({ scrollTop: 0 }, 1500, 'easeInOutExpo');
+                return false;   
             });
 
 
@@ -285,10 +356,10 @@
         })(jQuery);
 
         (function () {
-          const url = new URL(window.location.href);
-          const tab = (url.searchParams.get('tab') || 'faq').toLowerCase();
-          const targetBtn = document.querySelector(tab === 'contact' ? '#tab-contact' : '#tab-faq');
-          if (targetBtn && window.bootstrap) new bootstrap.Tab(targetBtn).show();
+            const url = new URL(window.location.href);
+            const tab = (url.searchParams.get('tab') || 'faq').toLowerCase();
+            const targetBtn = document.querySelector(tab === 'contact' ? '#tab-contact' : '#tab-faq');
+            if (targetBtn && window.bootstrap) new bootstrap.Tab(targetBtn).show();
         })();
     </script>
     <script src="~/js/minibit.js" asp-append-version="true"></script>
@@ -297,4 +368,5 @@
     @await Html.PartialAsync("_PartialViews/_PremiumModal")
 
 </body>
+
 </html>

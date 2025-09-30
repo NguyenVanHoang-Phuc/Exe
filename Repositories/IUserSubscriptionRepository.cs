@@ -9,6 +9,6 @@ namespace Repositories
     public interface IUserSubscriptionRepository
     {
         Task<bool> HasActiveAsync(int userId);
-        Task UpsertActivateAsync(int userId, int planId, int months);
+        Task UpsertActivateAsync(int userId, int planId, int months, decimal amount);
     }
 }
