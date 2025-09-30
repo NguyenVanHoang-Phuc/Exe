@@ -11,10 +11,12 @@ namespace DataObject
     public class UserSubscriptionDAO
     {
         private readonly FinanceAppDbContext _context;
+        private readonly PaymentDAO _paymentDAO;
 
-        public UserSubscriptionDAO(FinanceAppDbContext context)
+        public UserSubscriptionDAO(FinanceAppDbContext context, PaymentDAO paymentDAO)
         {
             _context = context;
+            _paymentDAO = paymentDAO;
         }
         //hàm ni để ktra có phải là user có đăng ký gói premium k
         public Task<bool> HasActiveAsync(int userId)
@@ -28,7 +30,7 @@ namespace DataObject
                     (s.EndDate == null || s.EndDate >= today));
         }
 
-        public async Task UpsertActivateAsync(int userId, int planId, int months)
+        public async Task UpsertActivateAsync(int userId, int planId, int months, decimal amount)
         {
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var current = await _context.UserSubscriptions
@@ -36,6 +38,8 @@ namespace DataObject
                             s.StartDate <= today && (s.EndDate == null || s.EndDate >= today))
                 .OrderByDescending(s => s.StartDate)
                 .FirstOrDefaultAsync();
+
+            var paymentId = await _paymentDAO.AddPaymentAsync(userId, planId, amount, "paid", "credit_card");
 
             if (current is null)
             {
@@ -45,14 +49,15 @@ namespace DataObject
                     PlanId = planId,
                     Status = "active",
                     StartDate = today,
-                    EndDate = today.AddMonths(months)
+                    EndDate = today.AddMonths(months),
+                    SubscriptionId = paymentId
                 });
             }
             else
             {
-                // Gia hạn: cộng thêm tháng vào EndDate hiện có
                 var baseDate = current.EndDate is null || current.EndDate < today ? today : current.EndDate.Value;
                 current.EndDate = baseDate.AddMonths(months);
+                current.Status = "active";
                 _context.UserSubscriptions.Update(current);
             }
 

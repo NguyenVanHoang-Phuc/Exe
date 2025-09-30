@@ -1,5 +1,6 @@
 ﻿using BusinessObject.Models;
 using DataObject;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Service;
@@ -64,6 +65,47 @@ builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
+// PayOS config
+
+// Auth
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddCookie(opt =>
+{
+    opt.LoginPath = "/Account/Login";
+    opt.LogoutPath = "/Account/Logout";
+    opt.SlidingExpiration = true;
+    opt.ExpireTimeSpan = TimeSpan.FromDays(14);
+    opt.Cookie.HttpOnly = true;
+    opt.Cookie.SameSite = SameSiteMode.Lax;
+});
+
+builder.Services.AddAuthorization();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.IdleTimeout = TimeSpan.FromMinutes(100);
+});
+
+//builder.Services.AddSingleton(payOS);
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddMvc();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy.WithOrigins("https://localhost:44343", "https://localhost:44344")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -72,6 +114,8 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
 }
 app.UseRouting();
+
+app.UseSession();
 
 app.UseAuthorization();
 
