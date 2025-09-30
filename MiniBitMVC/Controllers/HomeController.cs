@@ -21,43 +21,55 @@ namespace MiniBitMVC.Controllers
         private readonly ITransactionService _transactionService;
         private static bool _isPremium = false;
         private readonly ICategoryService _categoryService;
+        private readonly IBudgetService _budgetService;
 
-        public HomeController(ILogger<HomeController> logger, ITransactionService transactionService, ICategoryService categoryService)
+        public HomeController(ILogger<HomeController> logger, ITransactionService transactionService, ICategoryService categoryService, IBudgetService budgetService)
         {
             _logger = logger;
             _transactionService = transactionService;
             _categoryService = categoryService;
+            _budgetService = budgetService;
         }
 
         // GET: Dashboard
         public async Task<IActionResult> Index()
         {
-            var transactions = await _transactionService.GetTransactionsByUserIdAsync(1);
-            var categories = await _categoryService.GetByUserIdAsync(1);
+            int userId = 1; // sau này lấy từ session/login
+
+            var transactions = await _transactionService.GetTransactionsByUserIdAsync(userId);
+            var categories = await _categoryService.GetByUserIdAsync(userId);
+
+            var today = DateTime.Today;
+            var currentMonth = today.Month;
+            var currentYear = today.Year;
+            int daysInMonth = DateTime.DaysInMonth(currentYear, currentMonth);
+
+            // Lấy budget tháng hiện tại
+            var budget = await _budgetService.GetBudgetByUserIdAsync(userId);
+
             var model = new DashboardViewModel
             {
                 Transactions = transactions,
                 Categories = categories,
-                SavingsGoal = _savingsGoal,
+                SavingsGoal = new ExpenseModels.SavingsGoal
+                {
+                    MonthlyTarget = budget?.AmountLimit ?? 0,
+                    DailyLimit = (budget?.AmountLimit ?? 0) / daysInMonth
+                },
                 IsPremium = _isPremium
             };
 
-            // Calculate statistics
-            var today = DateTime.Today;
-            var currentMonth = DateTime.Now.Month;
-            var currentYear = DateTime.Now.Year;
+            // Tính thống kê
+            model.TodayTotal = await _transactionService.GetTodaySpendingByUserIdAsync(userId);
+            model.MonthlyTotal = await _transactionService.GetMonthlySpendingByUserIdAsync(userId);
+            model.MonthlySavings = await _transactionService.GetMonthlySavingByUserIdAsync(userId);
 
-            model.TodayTotal = await _transactionService.GetTodaySpendingByUserIdAsync(1);
-
-            model.MonthlyTotal = await _transactionService.GetMonthlySpendingByUserIdAsync(1);
-
-            model.MonthlySavings = await _transactionService.GetMonthlySavingByUserIdAsync(1);
-
-            // Generate notifications
+            // Notifications
             model.Notifications = GenerateNotifications(transactions, model);
 
             return View(model);
         }
+
 
         // POST: Add Transaction
         [HttpPost]
@@ -65,11 +77,6 @@ namespace MiniBitMVC.Controllers
         {
 
             transaction.UserId = 1; // giả lập userId
-            Console.WriteLine($"UserId: {transaction.UserId}");
-            Console.WriteLine($"Amount: {transaction.Amount}");
-            Console.WriteLine($"CategoryId: {transaction.CategoryId}");
-            Console.WriteLine($"Description: {transaction.Description}");
-            Console.WriteLine($"TransactionType: {transaction.TransactionType}");
 
             transaction.TransactionDate = DateTime.Now;
             await _transactionService.AddTransactionAsync(transaction);
@@ -278,16 +285,23 @@ namespace MiniBitMVC.Controllers
 
                         if (details.ToLower().Contains("tổng phát sinh")) continue;
 
-                        var amount = credit - debit;
-                        Console.WriteLine($"[XLSX] Date={date:yyyy-MM-dd}, Debit={debit}, Credit={credit}, Amount={amount}, Desc={details}");
-
-                        transactions.Add(new Transaction
+                        if (debit > 0) // chỉ lấy dòng chi tiêu
                         {
-                            UserId = 1,
-                            TransactionDate = date,
-                            Description = details,
-                            Amount = amount
-                        });
+                            var amount = debit; // chỉ lấy debit làm amount
+                            Console.WriteLine($"[XLSX] Date={date:yyyy-MM-dd}, Debit={debit}, Amount={amount}, Desc={details}");
+
+                            transactions.Add(new Transaction
+                            {
+                                UserId = 1,
+                                TransactionDate = date,
+                                Description = details,
+                                Amount = amount
+                            });
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[SKIP] Bỏ qua dòng vì debit <= 0: {details}");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -346,16 +360,23 @@ namespace MiniBitMVC.Controllers
 
                         if (details.ToLower().Contains("tổng phát sinh")) continue;
 
-                        var amount = credit - debit;
-                        Console.WriteLine($"[CSV] Date={date:yyyy-MM-dd}, Debit={debit}, Credit={credit}, Amount={amount}, Desc={details}");
-
-                        transactions.Add(new Transaction
+                        if (debit > 0)
                         {
-                            UserId = 1,
-                            TransactionDate = date,
-                            Description = details,
-                            Amount = amount
-                        });
+                            var amount = debit;
+                            Console.WriteLine($"[CSV] Date={date:yyyy-MM-dd}, Debit={debit}, Amount={amount}, Desc={details}");
+
+                            transactions.Add(new Transaction
+                            {
+                                UserId = 1,
+                                TransactionDate = date,
+                                Description = details,
+                                Amount = amount
+                            });
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[SKIP] Bỏ qua dòng vì debit <= 0: {details}");
+                        }
                     }
                     catch (Exception ex)
                     {

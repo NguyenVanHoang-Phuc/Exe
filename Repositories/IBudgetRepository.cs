@@ -10,8 +10,8 @@ namespace Repositories
     public interface IBudgetRepository
     {
         Task AddRangeAsync(List<Budget> budgets);
-        Task<List<Budget>> GetByGoalIdAsync(int goalId);
         Task DeleteRangeAsync(List<Budget> budgets);
         Task<Budget?> GetBudgetByUserIdAsync(int userId);
+        Task<Budget?> GetBudgetByUserMonthYearAsync(int userId, int month, int year);
     }
 }

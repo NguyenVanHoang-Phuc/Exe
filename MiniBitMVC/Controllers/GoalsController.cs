@@ -10,13 +10,11 @@ namespace MiniBitMVC.Controllers
     public class GoalsController : ControllerBase
     {
         private readonly IGoalService _goalService;
-        private readonly IBudgetService _budgetService;
         private readonly ITransactionService _traService;
 
-        public GoalsController(IGoalService goalService, IBudgetService budgetService, ITransactionService traService)
+        public GoalsController(IGoalService goalService, ITransactionService traService)
         {
             _goalService = goalService;
-            _budgetService = budgetService;
             _traService = traService;
         }
 
@@ -50,14 +48,7 @@ namespace MiniBitMVC.Controllers
                 CurrentAmount = createdGoal.CurrentAmount,
                 StartDate = createdGoal.StartDate,
                 EndDate = createdGoal.EndDate,
-                Status = createdGoal.Status,
-                Budgets = createdGoal.Budgets.Select(b => new BudgetDto
-                {
-                    BudgetId = b.BudgetId,
-                    Month = b.Month,
-                    Year = b.Year,
-                    AmountLimit = b.AmountLimit
-                }).ToList()
+                Status = createdGoal.Status
             };
 
             return Ok(result);
@@ -78,14 +69,7 @@ namespace MiniBitMVC.Controllers
                 CurrentAmount = g.CurrentAmount,
                 StartDate = g.StartDate,
                 EndDate = g.EndDate,
-                Status = g.Status,
-                Budgets = g.Budgets.Select(b => new BudgetDto
-                {
-                    BudgetId = b.BudgetId,
-                    Month = b.Month,
-                    Year = b.Year,
-                    AmountLimit = b.AmountLimit
-                }).ToList()
+                Status = g.Status
             });
 
             return Ok(result);
@@ -123,24 +107,5 @@ namespace MiniBitMVC.Controllers
 
             return Ok(dto);
         }
-
-        [HttpGet("budget/{userId}")]
-        public async Task<IActionResult> GetBudget(int userId)
-        {
-            var budget = await _budgetService.GetBudgetByUserIdAsync(userId);
-
-            var today = DateOnly.FromDateTime(DateTime.Now);
-            var startOfMonth = new DateOnly(today.Year, today.Month, 1);
-
-            var spent = await _traService.GetTotalSavedByUserInRangeAsync(userId, startOfMonth, today);
-
-            return Ok(new BudgetSummaryDto
-            {
-                BudgetMonth = budget?.AmountLimit ?? 0,
-                SpentAmount = spent,
-                ThresholdPercent = 80
-            });
-        }
-
     }
 }
