@@ -85,9 +85,6 @@
                                 <i class="fas fa-coins text-primary"></i>
                             </div>
                             <h3 class="text-primary mb-2" id="todayTotal">@Model.TodayTotal.ToString("N0")đ</h3>
-                            <div class="progress mb-2" style="height: 8px;">
-                                <div class="progress-bar bg-primary" role="progressbar" id="todayProgress" style="width: 0%"></div>
-                            </div>
                             <small class="text-muted">Giới hạn: <span id="dailyLimitDisplay">@Model.SavingsGoal.DailyLimit.ToString("N0")đ</span></small>
                         </div>
                     </div>
@@ -102,10 +99,7 @@
                                 <i class="fas fa-calendar text-success"></i>
                             </div>
                             <h3 class="text-success mb-2" id="monthlyTotal">@Model.MonthlyTotal.ToString("N0")đ</h3>
-                            <div class="progress mb-2" style="height: 8px;">
-                                <div class="progress-bar bg-success" role="progressbar" id="monthlyProgress" style="width: 0%"></div>
-                            </div>
-                            <small class="text-muted">Mục tiêu: <span id="monthlyTargetDisplay">@Model.SavingsGoal.MonthlyTarget.ToString("N0")đ</span></small>
+                            <small class="text-muted">Mục tiêu: Chi tiêu dưới <span id="monthlyTargetDisplay">@Model.SavingsGoal.MonthlyTarget.ToString("N0")đ</span></small>
                         </div>
                     </div>
                 </div>
@@ -180,7 +174,7 @@
                                             </select>
                                         </td>
                                         <td>
-                                            @(transaction.Amount < 0 ? "Chi tiêu" : "Thu nhập")
+                                            Chi tiêu
                                         </td>
                                         <td class="text-end amount-cell">
                                             <span class="amount-value @(transaction.Amount < 0 ? "text-danger" : "text-success")">
@@ -235,12 +229,18 @@
                                 </button>
                             </form>
                         </div>
-                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-                            <i class="fas fa-plus me-1"></i>Thêm chi tiêu
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
+                            <i class="fas fa-wallet me-1"></i>Thêm Ngân sách
                         </button>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                                <i class="fas fa-plus me-1"></i>Thêm chi tiêu
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
+
 
             <!-- 3 pill thống kê -->
             <div class="row g-3 mb-4">
@@ -548,6 +548,48 @@
             </div>
         </div>
 
+        <!-- Add Budget Modal -->
+        <div class="modal fade" id="addBudgetModal" tabindex="-1" aria-labelledby="addBudgetModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="addBudgetForm">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addBudgetModalLabel">Thêm Ngân sách</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="userId" value="@User.FindFirst("UserId")?.Value" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Số tiền ngân sách</label>
+                                <input type="number" step="1000" id="amountLimit" class="form-control" required />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tháng bắt đầu</label>
+                                    <input type="number" id="startMonth" min="1" max="12" class="form-control" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tháng kết thúc</label>
+                                    <input type="number" id="endMonth" min="1" max="12" class="form-control" required />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Năm</label>
+                                <input type="number" id="year" min="2024" max="2100" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Lưu</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
 
 
 
@@ -776,7 +818,7 @@
                                     `).join("")}
                                 </select>
                             </td>
-                            <td>${t.amount < 0 ? "Chi tiêu" : "Thu nhập"}</td>
+                            <td>Chi tiêu</td>
                             <td class="text-end amount-cell">
                                 <span class="amount-value ${t.amount < 0 ? "text-danger" : "text-success"}">
                                     ${t.amount?.toLocaleString() ?? 0}đ
@@ -1095,7 +1137,7 @@
                                     $("#activeName").text(res.goalName ?? "");
                                     $("#activeTarget").text((res.targetAmount ?? 0).toLocaleString("vi-VN") + "đ");
 
-                                    // hiển thị start -> end
+                                    
                                     const start = res.startDate ? new Date(res.startDate).toLocaleDateString("vi-VN") : "";
                                     const end = res.endDate ? new Date(res.endDate).toLocaleDateString("vi-VN") : "";
                                     $("#activePeriod").text(start && end ? `${start} → ${end}` : "");
@@ -1144,7 +1186,41 @@
                 });
             </script>
 
+            <script>
+                // add budget
+                document.getElementById("addBudgetForm").addEventListener("submit", async (e) => {
+                    e.preventDefault();
 
+                    const data = {
+                        userId: 1,
+                        amountLimit: parseFloat(document.getElementById("amountLimit").value),
+                        startMonth: parseInt(document.getElementById("startMonth").value),
+                        endMonth: parseInt(document.getElementById("endMonth").value),
+                        year: parseInt(document.getElementById("year").value)
+                    };
+
+                    try {
+                        const res = await fetch("/api/budget/add-range", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (res.ok) {
+                            alert("Thêm ngân sách thành công!");
+                            location.reload(); // reload lại để cập nhật view
+                        } else {
+                            const err = await res.json();
+                            alert("Lỗi: " + (err.title || "Không thể thêm ngân sách"));
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                        alert("Có lỗi khi gọi API.");
+                    }
+                });
+            </script>
 }
 
 <link href="~/css/MinibitCharacter.css" rel="stylesheet" />

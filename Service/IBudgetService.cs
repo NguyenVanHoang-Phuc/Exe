@@ -10,5 +10,9 @@ namespace Service
     public interface IBudgetService
     {
         Task<Budget?> GetBudgetByUserIdAsync(int userId);
+        Task AddRangeAsync(List<Budget> budgets);
+        Task DeleteRangeAsync(List<Budget> budgets);
+        Task<Budget?> GetBudgetByUserMonthYearAsync(int userId, int month, int year);
+        Task AddBudgetsForMonthsAsync(int userId, decimal amountLimit, int startMonth, int endMonth, int year);
     }
 }

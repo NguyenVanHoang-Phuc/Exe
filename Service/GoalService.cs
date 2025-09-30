@@ -11,13 +11,11 @@ namespace Service
     public class GoalService : IGoalService
     {
         private readonly IGoalRepository _goalRepo;
-        private readonly IBudgetRepository _budgetRepo;
         private readonly ITransactionRepository _tranRepo;
 
-        public GoalService(IGoalRepository goalRepo, IBudgetRepository budgetRepo , ITransactionRepository transactionRepository)
+        public GoalService(IGoalRepository goalRepo, ITransactionRepository transactionRepository)
         {
             _goalRepo = goalRepo;
-            _budgetRepo = budgetRepo;
             _tranRepo = transactionRepository;
         }
 
@@ -30,9 +28,7 @@ namespace Service
                 goal.StartDate = DateOnly.FromDateTime(DateTime.Today);
             }
 
-            // Lưu goal -> trigger DB tự phân bổ budget
             var createdGoal = await _goalRepo.AddAsync(goal);
-
             return createdGoal;
         }
 
@@ -45,11 +41,6 @@ namespace Service
         {
             var goal = await _goalRepo.GetByIdAsync(goalId);
             if (goal == null) throw new Exception("Goal not found");
-
-            if (goal.Budgets.Any())
-            {
-                await _budgetRepo.DeleteRangeAsync(goal.Budgets.ToList());
-            }
 
             await _goalRepo.DeleteAsync(goal);
         }
@@ -64,13 +55,10 @@ namespace Service
             var goal = await _goalRepo.GetActiveGoalByUserIdAsync(userId);
             if (goal == null) return null;
 
-            // StartDate dùng StartDate của goal, nếu null thì mặc định Today
             var startDate = goal.StartDate;
 
-            // EndDate dùng EndDate của goal, nếu null thì lấy tháng hiện tại
-            var endDate = goal.EndDate ?? DateOnly.FromDateTime(DateTime.Today);
+            var endDate = DateOnly.FromDateTime(DateTime.Today);
 
-            // Lấy tổng tiền đã tiết kiệm trong khoảng StartDate → EndDate
             var savedAmount = await _tranRepo.GetTotalSavedByUserInRangeAsync(userId, startDate, endDate);
 
             decimal progressPercent = 0;
@@ -82,8 +70,5 @@ namespace Service
 
             return (goal, savedAmount, progressPercent);
         }
-
-
-
     }
 }

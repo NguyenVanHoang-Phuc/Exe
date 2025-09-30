@@ -20,10 +20,6 @@ namespace Repositories
         {
             await _budgetDAO.AddRangeAsync(budgets);
         }
-        public async Task<List<Budget>> GetByGoalIdAsync(int goalId)
-        {
-            return await _budgetDAO.GetByGoalIdAsync(goalId);
-        }
         public async Task DeleteRangeAsync(List<Budget> budgets)
         {
             await _budgetDAO.DeleteRangeAsync(budgets);
@@ -31,6 +27,11 @@ namespace Repositories
         public async Task<Budget?> GetBudgetByUserIdAsync(int userId)
         {
             return await _budgetDAO.GetBudgetByUserIdAsync(userId);
+        }
+
+        public async Task<Budget?> GetBudgetByUserMonthYearAsync(int userId, int month, int year)
+        {
+            return await _budgetDAO.GetBudgetByUserMonthYearAsync(userId, month, year);
         }
     }
 }
