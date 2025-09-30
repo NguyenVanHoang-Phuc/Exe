@@ -27,7 +27,6 @@ namespace DataObject
         public async Task<Goal?> GetByIdAsync(int id)
         {
             return await _context.Goals
-                .Include(g => g.Budgets)
                 .FirstOrDefaultAsync(g => g.GoalId == id);
         }
 
@@ -35,7 +34,6 @@ namespace DataObject
         {
             return await _context.Goals
                 .Where(g => g.UserId == userId)
-                .Include(g => g.Budgets)
                 .ToListAsync();
         }
 

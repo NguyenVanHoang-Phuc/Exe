@@ -23,7 +23,5 @@ public partial class Goal
 
     public string? Status { get; set; }
 
-    public virtual ICollection<Budget> Budgets { get; set; } = new List<Budget>();
-
     public virtual User User { get; set; } = null!;
 }
