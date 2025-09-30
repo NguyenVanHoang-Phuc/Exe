@@ -72,7 +72,7 @@ namespace MiniBitMVC.Controllers
             await SignInLocalAsync(user);
 
             HttpContext.Session.SetInt32("UserId", user.UserId);
-
+            HttpContext.Session.SetString("UserName", user.Name);
             var isPremium = await _userSubscriptionService.HasActiveAsync(user.UserId);
             HttpContext.Session.SetInt32("IsPremium", isPremium ? 1 : 0);
             if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
@@ -99,7 +99,7 @@ namespace MiniBitMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync();
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
 

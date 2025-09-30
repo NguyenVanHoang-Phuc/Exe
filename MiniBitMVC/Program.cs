@@ -123,7 +123,7 @@ if (!app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseSession();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
