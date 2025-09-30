@@ -1,10 +1,13 @@
-﻿@{
+﻿@model MiniBitMVC.ViewModels.SignUpViewModel
+@{
     ViewData["Title"] = "Đăng Ký";
     Layout = null;
 }
 
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="~/css/Auth.css" rel="stylesheet" />
+
 <div class="login-container">
-    <!-- Brand Section -->
     <div class="brand-section">
         <div class="brand-logo">
             <img src="~/images/LogoMiniBit.png" alt="MINIBIT Logo" />
@@ -12,30 +15,51 @@
         <h1 class="brand-title">Chào mừng bạn đến với MINIBIT</h1>
     </div>
 
-    <!-- Signup Section -->
     <div class="login-section">
         <div class="login-form-container">
             <h2 class="login-title">Đăng Ký</h2>
 
-            <form method="post" asp-action="Signup">
+            <form method="post" asp-action="SignUp" asp-controller="Account" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
                 <div class="form-group">
-                    <label class="form-label"><span class="required">*</span>Họ và Tên</label>
-                    <input class="form-input" type="text" placeholder="Nhập họ và tên" />
+                    <label class="form-label"><span class="required">*</span> Họ và Tên</label>
+                    <input class="form-input" asp-for="Name" placeholder="Nhập họ và tên" />
+                    <span class="text-danger small" asp-validation-for="Name"></span>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label"><span class="required">*</span>Email</label>
-                    <input class="form-input" type="email" placeholder="Nhập Email của bạn" />
+                    <label class="form-label"><span class="required">*</span> Email</label>
+                    <input class="form-input" asp-for="Email" type="email" placeholder="Nhập Email của bạn" />
+                    <span class="text-danger small" asp-validation-for="Email"></span>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label"><span class="required">*</span>Mật khẩu</label>
-                    <input class="form-input" type="password" placeholder="Nhập mật khẩu" />
+                <!-- Mật khẩu -->
+                <div class="form-group password-field">
+                    <label class="form-label"><span class="required">*</span> Mật khẩu</label>
+                    <div class="pwd-inner">
+                        <!-- ĐỂ TagHelper tự sinh id/name theo asp-for (KHÔNG tự set id/name) -->
+                        <input class="form-input form-control pe-5" asp-for="Password" placeholder="Nhập mật khẩu" />
+                        <button type="button" id="togglePassword" class="btn-eye" aria-label="Hiện/ẩn mật khẩu">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <span class="text-danger small" asp-validation-for="Password"></span>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label"><span class="required">*</span>Nhập lại mật khẩu</label>
-                    <input class="form-input" type="password" placeholder="Xác nhận mật khẩu" />
+                <!-- Nhập lại mật khẩu -->
+                <div class="form-group password-field">
+                    <label class="form-label"><span class="required">*</span> Nhập lại mật khẩu</label>
+                    <div class="pwd-inner">
+                        <input class="form-input form-control pe-5" asp-for="ConfirmPassword" placeholder="Nhập lại mật khẩu" />
+                        <button type="button" id="toggleConfirm" class="btn-eye" aria-label="Hiện/ẩn mật khẩu nhập lại">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <span class="text-danger small" asp-validation-for="ConfirmPassword"></span>
                 </div>
 
                 <button type="submit" class="login-btn">Đăng Ký</button>
@@ -49,4 +73,21 @@
     </div>
 </div>
 
-<link href="~/css/Auth.css" rel="stylesheet" />
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const bindEye = (inputSelector, btnSelector) => {
+          const i = document.querySelector(inputSelector);
+          const b = document.querySelector(btnSelector);
+          if (!i || !b) return;
+          b.addEventListener('click', () => {
+            const show = i.type === 'password';
+            i.type = show ? 'text' : 'password';
+            b.innerHTML = show ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+          });
+        };
+        // TagHelper sinh id theo tên property => #Password, #ConfirmPassword
+        bindEye('#Password', '#togglePassword');
+        bindEye('#ConfirmPassword', '#toggleConfirm');
+    </script>
+}

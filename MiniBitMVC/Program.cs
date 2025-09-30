@@ -87,11 +87,6 @@ builder.Services.AddAuthentication(options =>
     opt.ExpireTimeSpan = TimeSpan.FromDays(14);
     opt.Cookie.HttpOnly = true;
     opt.Cookie.SameSite = SameSiteMode.Lax;
-})
-
-.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
-{
-    
 });
 
 builder.Services.AddAuthorization();
