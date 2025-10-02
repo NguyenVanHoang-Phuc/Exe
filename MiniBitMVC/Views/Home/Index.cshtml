@@ -864,6 +864,20 @@
 
             <script>
 
+                // Hàm định dạng tin nhắn và xóa mọi dấu *
+                function formatMessageText(responseText) {
+                    if (!responseText) return "";
+                    // 1. Xóa tất cả dấu *
+                    const clean = responseText.replace(/\*/g, "");
+                    // 2. Chuyển mỗi dòng thành <p>
+                    return clean
+                        .split("\n")
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0)
+                        .map(line => `<p>${line}</p>`)
+                        .join("");
+                }
+                
                 document.getElementById("sendChatBtn").addEventListener("click", async () => {
                     const input = document.getElementById("chatInput");
                     const history = document.getElementById("chatHistory");

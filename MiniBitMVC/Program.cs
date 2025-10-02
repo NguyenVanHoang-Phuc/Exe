@@ -70,7 +70,7 @@ builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 // PayOS config
-IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.Development.json").Build();
+IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
 PayOS payOS = new PayOS(
     builder.Configuration["Environment:PAYOS_CLIENT_ID"] ?? "",
@@ -91,7 +91,7 @@ builder.Services.AddAuthentication(options =>
     opt.ExpireTimeSpan = TimeSpan.FromDays(14);
     opt.Cookie.HttpOnly = true;
     opt.Cookie.SameSite = SameSiteMode.Lax;
-})
+});
 
 builder.Services.AddAuthorization();
 builder.Services.AddSession(options =>
