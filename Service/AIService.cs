@@ -47,10 +47,11 @@ namespace Service
 
             // 3. Tạo prompt cho AI, kèm dữ liệu thực tế
             var fullPrompt = $@"
-                            User có chi tiêu tháng trước: {lastMonthTotal}đ, chi tiêu tháng này: {thisMonthTotal}đ.
-                            {prompt}
-                            Hãy đưa ra lời khuyên chi tiết, dễ hiểu và cụ thể dựa trên số liệu này.
-                            ";
+            User có chi tiêu tháng trước: {lastMonthTotal.ToString("N0")}đ,
+            chi tiêu tháng này: {thisMonthTotal.ToString("N0")}đ.
+            {prompt}
+            Hãy đưa ra lời khuyên chi tiết, dễ hiểu và cụ thể dựa trên số liệu này.
+            ";
 
             // 4. Gọi API Groq với fullPrompt
             var requestBody = new
