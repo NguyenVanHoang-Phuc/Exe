@@ -903,8 +903,10 @@
 
                         // Hiển thị câu trả lời
                         history.innerHTML += `
-                            <div class="text-start mb-2">
-                                <span class="badge bg-light text-dark" style="white-space: pre-wrap;">${data.advice}</span>
+                             <div class="text-start mb-2">
+                                <div class="p-2 rounded bg-light text-dark" style="white-space: normal;">
+                                    ${formatMessageText(data.advice)}
+                                </div>
                             </div>`;
                         history.scrollTop = history.scrollHeight;
                     } catch (e) {
