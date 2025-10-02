@@ -1,10 +1,12 @@
-﻿@{
+﻿@model MiniBitMVC.ViewModels.LoginFormViewModel
+@{
     ViewData["Title"] = "Đăng Nhập";
     Layout = null;
 }
 
 <link href="~/css/Auth.css" rel="stylesheet" />
-
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <div class="login-container">
     <!-- Brand Section -->
     <div class="brand-section">
@@ -30,28 +32,36 @@
 
             <form asp-action="Login" method="post" novalidate>
                 @Html.AntiForgeryToken()
-
+                <input type="hidden" asp-for="ReturnUrl" />
+                <partial name="_ValidationScriptsPartial" />
                 <div class="form-group">
                     <label class="form-label" for="Email">
                         <span class="required">*</span> Email
                     </label>
-                    <input id="Email" name="Email" type="email" class="form-input"
-                           placeholder="Nhập Email của bạn" required />
-                    <span class="text-danger small" ></span>
+                    <input class="form-input" asp-for="Email" placeholder="Nhập Email của bạn" />
+                    <span class="text-danger small"></span>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group password-field">
                     <label class="form-label" for="Password">
                         <span class="required">*</span> Mật khẩu
                     </label>
-                    <input id="Password" name="Password" type="password" class="form-input"
-                           placeholder="Nhập Mật khẩu" required />
+
+                    <div class="pwd-inner">
+                        <input id="Password" name="Password" type="password"
+                               class="form-input form-control pe-5"
+                               placeholder="Nhập Mật khẩu" asp-for="Password" required />
+                        <button type="button" id="togglePassword" class="btn-eye" aria-label="Hiện/ẩn mật khẩu">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+
                     <span class="text-danger small"></span>
                 </div>
 
                 <div class="form-row-between">
                     <label class="checkbox">
-                        <input id="RememberMe" name="RememberMe" type="checkbox" />
+                        <input class="form-check-input" asp-for="RememberMe" />
                         <span>Ghi nhớ mật khẩu</span>
                     </label>
 
@@ -69,8 +79,9 @@
             <div class="divider"><span>HOẶC</span></div>
 
             <!-- Google Login Button -->
-            <form asp-action="GoogleLogin" asp-controller="Auth" method="post" class="mb-4">
+            <form asp-action="GoogleLogin" asp-controller="Account" method="post" class="mb-4">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@Model?.ReturnUrl" />
                 <button type="submit" class="oauth-btn google">
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google icon" />
                     <span>Đăng nhập với Google</span>
@@ -79,10 +90,27 @@
 
             <div class="register-link">
                 Bạn chưa có tài khoản?
-                <a href="@Url.Action("Signup", "Auth")">Đăng kí</a>
+                <a href="@Url.Action("SignUp", "Account")">Đăng kí</a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+      const pwd = document.getElementById('Password');
+      const btn = document.getElementById('togglePassword');
+      if (!pwd || !btn) return;
+
+      btn.addEventListener('click', function () {
+        const show = pwd.type === 'password';
+        pwd.type = show ? 'text' : 'password';
+        btn.innerHTML = show
+          ? '<i class="fa-solid fa-eye-slash"></i>'
+          : '<i class="fa-solid fa-eye"></i>';
+        btn.setAttribute('aria-pressed', show.toString());
+      });
+    })();
+</script>
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>

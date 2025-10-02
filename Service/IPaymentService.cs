@@ -8,5 +8,7 @@ namespace Service
 {
     public interface IPaymentService
     {
+        Task SavePaymentAsync(BusinessObject.Models.Payment payment);
+        Task<int> AddPaymentAsync(int userId, int planId, decimal amount, string status, string method);
     }
 }

@@ -15,15 +15,34 @@ namespace MiniBitMVC.Controllers
 
         private readonly IUserService _userService;
         private readonly IUserSubscriptionService _userSubscriptionService;
+        private readonly IBudgetService _budgetService;
+        private readonly ITransactionService _transactionService;
 
-        public AccountController(IUserService userService, IUserSubscriptionService userSubscriptionService)
+        public AccountController(IUserService userService, IUserSubscriptionService userSubscriptionService, IBudgetService budgetService, ITransactionService transactionService)
         {
             _userService = userService;
             _userSubscriptionService = userSubscriptionService;
+            _budgetService = budgetService;
+            _transactionService = transactionService;
         }
         public IActionResult HomePage()
         {
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ActivatePremium(int userId, int planId, int months, decimal amount)
+        {
+            try
+            {
+                await _userSubscriptionService.UpsertActivateAsync(userId, planId, months, amount);
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return View("HomePage");
+            }
         }
 
         [HttpGet]
@@ -52,8 +71,10 @@ namespace MiniBitMVC.Controllers
             }
             await SignInLocalAsync(user);
 
+            HttpContext.Session.SetInt32("UserId", user.UserId);
+            HttpContext.Session.SetString("UserName", user.Name);
             var isPremium = await _userSubscriptionService.HasActiveAsync(user.UserId);
-
+            HttpContext.Session.SetInt32("IsPremium", isPremium ? 1 : 0);
             if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 return Redirect(model.ReturnUrl);
 
@@ -78,7 +99,7 @@ namespace MiniBitMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync();
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
 
@@ -161,18 +182,23 @@ namespace MiniBitMVC.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        //[HttpGet]
-        //[Authorize]
-        //public async Task<IActionResult> Profile()
-        //{
-        //    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-        //    var user = await _userService.GetUserByIdAsync(userId);
+        public async Task<IActionResult> Profile()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
 
-        //    if (user == null) return NotFound();
+            if (userId == null)
+            {
+                return RedirectToAction("Login");
+            }
 
-        //    var userSubscription = await _userSubscriptionService.HasActiveAsync(userId);
-        //    bool isPremium = userSubscription != null && userSubscription.Ex
-        //    return View();
-        //}
+            // Kiểm tra xem người dùng có trạng thái "active" hay không
+            var isPremium = await _userSubscriptionService.HasActiveAsync(userId.Value);
+
+            // Truyền thông tin vào ViewBag hoặc session để hiển thị trên header
+            ViewBag.IsPremium = isPremium;
+
+            return View();
+        }
+
     }
 }

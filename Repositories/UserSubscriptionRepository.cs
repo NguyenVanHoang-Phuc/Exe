@@ -18,6 +18,6 @@ namespace Repositories
 
         public Task<bool> HasActiveAsync(int userId) => _dao.HasActiveAsync(userId);
 
-        public Task UpsertActivateAsync(int userId, int planId, int months) => _dao.UpsertActivateAsync(userId, planId, months);
+        public async Task UpsertActivateAsync(int userId, int planId, int months, decimal amount) => await _dao.UpsertActivateAsync(userId, planId, months, amount);
     }
 }

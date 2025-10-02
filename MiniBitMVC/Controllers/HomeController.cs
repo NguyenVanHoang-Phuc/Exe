@@ -34,7 +34,11 @@ namespace MiniBitMVC.Controllers
         // GET: Dashboard
         public async Task<IActionResult> Index()
         {
-            int userId = 1; // sau này lấy từ session/login
+            int? sessionUserId = HttpContext.Session.GetInt32("UserId");
+            if (sessionUserId == null)
+                return RedirectToAction("Login", "Account");
+
+            int userId = sessionUserId.Value;
 
             var transactions = await _transactionService.GetTransactionsByUserIdAsync(userId);
             var categories = await _categoryService.GetByUserIdAsync(userId);
@@ -75,8 +79,13 @@ namespace MiniBitMVC.Controllers
         [HttpPost]
         public async Task<IActionResult> AddTransaction([FromBody] Transaction transaction)
         {
+            int? sessionUserId = HttpContext.Session.GetInt32("UserId");
+            if (sessionUserId == null)
+                return RedirectToAction("Login", "Account");
 
-            transaction.UserId = 1; // giả lập userId
+            int userId = sessionUserId.Value;
+
+            transaction.UserId = userId; 
 
             transaction.TransactionDate = DateTime.Now;
             await _transactionService.AddTransactionAsync(transaction);
@@ -207,6 +216,10 @@ namespace MiniBitMVC.Controllers
                 return RedirectToAction("Index");
             }
 
+            int? sessionUserId = HttpContext.Session.GetInt32("UserId");
+            if (sessionUserId == null) return RedirectToAction("Login", "Account");
+            int userId = sessionUserId.Value;
+
             var transactions = new List<Transaction>();
             string ext = Path.GetExtension(file.FileName).ToLower();
 
@@ -292,7 +305,7 @@ namespace MiniBitMVC.Controllers
 
                             transactions.Add(new Transaction
                             {
-                                UserId = 1,
+                                UserId = userId,
                                 TransactionDate = date,
                                 Description = details,
                                 Amount = amount
@@ -367,7 +380,7 @@ namespace MiniBitMVC.Controllers
 
                             transactions.Add(new Transaction
                             {
-                                UserId = 1,
+                                UserId = userId,
                                 TransactionDate = date,
                                 Description = details,
                                 Amount = amount
@@ -401,7 +414,10 @@ namespace MiniBitMVC.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTransactions(string type, string date, string week, string month, string from, string to)
         {
-            var transactions = await _transactionService.GetTransactionsByUserIdAsync(1);
+            int? sessionUserId = HttpContext.Session.GetInt32("UserId");
+            if (sessionUserId == null) return RedirectToAction("Login", "Account");
+            int userId = sessionUserId.Value;
+            var transactions = await _transactionService.GetTransactionsByUserIdAsync(userId);
 
             if (type == "day" && DateTime.TryParse(date, out var d))
             {

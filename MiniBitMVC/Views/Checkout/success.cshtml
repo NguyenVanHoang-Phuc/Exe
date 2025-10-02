@@ -1,0 +1,77 @@
+@{
+    ViewData["Title"] = "Đăng Nhập";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán thành công</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-box {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .payment-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .payment-message {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+            .payment-message a {
+                color: #007bff;
+                text-decoration: none;
+            }
+
+                .payment-message a:hover {
+                    text-decoration: underline;
+                }
+
+        #return-page-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+            #return-page-btn:hover {
+                background-color: #45a049;
+            }
+    </style>
+</head>
+<body>
+    <div class="main-box">
+        <h4 class="payment-title">Thanh toán thành công. Cảm ơn bạn đã sử dụng payOS!</h4>
+        <p class="payment-message">
+            Nếu có bất kỳ câu hỏi nào, hãy gửi email tới <a href="mailto:support@payos.vn">support@payos.vn</a>.
+        </p>
+        <a href="@Url.Action("Index", "Home")" id="return-page-btn">Trở về trang</a>
+    </div>
+</body>
+</html>

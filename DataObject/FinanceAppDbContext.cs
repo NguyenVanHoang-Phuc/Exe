@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using BusinessObject.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace BusinessObject.Models;
+namespace DataObject;
 
 public partial class FinanceAppDbContext : DbContext
 {
@@ -36,10 +37,6 @@ public partial class FinanceAppDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserSubscription> UserSubscriptions { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=PHUCNVH;Database=FinanceAppDB;User Id=sa;Password=1234567;TrustServerCertificate=true;Trusted_Connection=SSPI;Encrypt=false;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -116,7 +113,7 @@ public partial class FinanceAppDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Budgets)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Budgets__user_id__4D94879B");
+                .HasConstraintName("FK__Budgets__user_id__60A75C0F");
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -139,7 +136,7 @@ public partial class FinanceAppDbContext : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.Categories)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__Categorie__user___38996AB5");
+                .HasConstraintName("FK__Categorie__user___4BAC3F29");
         });
 
         modelBuilder.Entity<Goal>(entity =>
@@ -173,7 +170,7 @@ public partial class FinanceAppDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Goals)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Goals__user_id__47DBAE45");
+                .HasConstraintName("FK__Goals__user_id__5AEE82B9");
         });
 
         modelBuilder.Entity<Payment>(entity =>
@@ -207,16 +204,16 @@ public partial class FinanceAppDbContext : DbContext
             entity.HasOne(d => d.Plan).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.PlanId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Payment__plan_id__33D4B598");
+                .HasConstraintName("FK__Payment__plan_id__46E78A0C");
 
             entity.HasOne(d => d.Subscription).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.SubscriptionId)
-                .HasConstraintName("FK__Payment__subscri__34C8D9D1");
+                .HasConstraintName("FK__Payment__subscri__47DBAE45");
 
             entity.HasOne(d => d.User).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Payment__user_id__32E0915F");
+                .HasConstraintName("FK__Payment__user_id__45F365D3");
         });
 
         modelBuilder.Entity<PremiumPlan>(entity =>
@@ -280,12 +277,12 @@ public partial class FinanceAppDbContext : DbContext
             entity.HasOne(d => d.Category).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Transacti__categ__3F466844");
+                .HasConstraintName("FK__Transacti__categ__52593CB8");
 
             entity.HasOne(d => d.User).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Transacti__user___3E52440B");
+                .HasConstraintName("FK__Transacti__user___5165187F");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -322,7 +319,7 @@ public partial class FinanceAppDbContext : DbContext
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Users__role_id__29572725");
+                .HasConstraintName("FK__Users__role_id__3C69FB99");
         });
 
         modelBuilder.Entity<UserSubscription>(entity =>
@@ -349,12 +346,12 @@ public partial class FinanceAppDbContext : DbContext
             entity.HasOne(d => d.Plan).WithMany(p => p.UserSubscriptions)
                 .HasForeignKey(d => d.PlanId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__User_Subs__plan___2F10007B");
+                .HasConstraintName("FK__User_Subs__plan___4222D4EF");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserSubscriptions)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__User_Subs__user___2E1BDC42");
+                .HasConstraintName("FK__User_Subs__user___412EB0B6");
         });
 
         OnModelCreatingPartial(modelBuilder);
