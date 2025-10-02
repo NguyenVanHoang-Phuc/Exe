@@ -863,7 +863,6 @@
             </script>
 
             <script>
-
                 // Hàm định dạng tin nhắn và xóa mọi dấu *
                 function formatMessageText(responseText) {
                     if (!responseText) return "";
@@ -877,7 +876,7 @@
                         .map(line => `<p>${line}</p>`)
                         .join("");
                 }
-                
+
                 document.getElementById("sendChatBtn").addEventListener("click", async () => {
                     const input = document.getElementById("chatInput");
                     const history = document.getElementById("chatHistory");
@@ -904,8 +903,10 @@
 
                         // Hiển thị câu trả lời
                         history.innerHTML += `
-                            <div class="text-start mb-2">
-                                <span class="badge bg-light text-dark" style="white-space: pre-wrap;">${data.advice}</span>
+                             <div class="text-start mb-2">
+                                <div class="p-2 rounded bg-light text-dark" style="white-space: normal;">
+                                    ${formatMessageText(data.advice)}
+                                </div>
                             </div>`;
                         history.scrollTop = history.scrollHeight;
                     } catch (e) {
