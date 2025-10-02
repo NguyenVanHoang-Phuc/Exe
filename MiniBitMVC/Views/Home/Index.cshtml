@@ -229,6 +229,11 @@
                                         onclick="document.getElementById('fileInput').click()">
                                     <i class="fas fa-file-import me-1"></i>Nhập CSV/XLSX
                                 </button>
+
+                                <div class="form-text text-muted small mt-1">
+                                    Hiện tại hệ thống chỉ hỗ trợ file CSV/XLSX của ngân hàng <strong>MB</strong>.
+                                    Các ngân hàng khác sẽ được cập nhật sau.
+                                </div>
                             </form>
                         </div>
                         <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
@@ -866,9 +871,17 @@
                 // Hàm định dạng tin nhắn và xóa mọi dấu *
                 function formatMessageText(responseText) {
                     if (!responseText) return "";
+
                     // 1. Xóa tất cả dấu *
-                    const clean = responseText.replace(/\*/g, "");
-                    // 2. Chuyển mỗi dòng thành <p>
+                    let clean = responseText.replace(/\*/g, "");
+
+                    // 2. Escape HTML đặc biệt để không bị parse sai
+                    clean = clean
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;");
+
+                    // 3. Xuống dòng thành <p>
                     return clean
                         .split("\n")
                         .map(line => line.trim())
