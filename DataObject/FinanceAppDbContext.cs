@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using BusinessObject.Models;
+﻿using BusinessObject.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
 
 namespace DataObject;
 
@@ -14,6 +15,22 @@ public partial class FinanceAppDbContext : DbContext
     public FinanceAppDbContext(DbContextOptions<FinanceAppDbContext> options)
         : base(options)
     {
+    }
+
+    private string GetConnectionString()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.Development.json", true, true).Build();
+        return configuration["ConnectionStrings:DefaultConnection"];
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer(GetConnectionString());
+        }
     }
 
     public virtual DbSet<AiAdvice> AiAdvices { get; set; }

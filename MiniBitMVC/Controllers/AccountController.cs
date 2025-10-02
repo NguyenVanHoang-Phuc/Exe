@@ -17,6 +17,7 @@ namespace MiniBitMVC.Controllers
         private readonly IUserSubscriptionService _userSubscriptionService;
         private readonly IBudgetService _budgetService;
         private readonly ITransactionService _transactionService;
+        private readonly ILogger _logger;
 
         public AccountController(IUserService userService, IUserSubscriptionService userSubscriptionService, IBudgetService budgetService, ITransactionService transactionService)
         {

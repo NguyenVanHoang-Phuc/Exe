@@ -18,12 +18,14 @@ builder.Services.AddControllersWithViews()
         x.JsonSerializerOptions.WriteIndented = true;
     });
 
+
 builder.Services.AddDbContext<FinanceAppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlOptions => sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
     )
-    );
+);
+
 
 builder.Services.AddScoped<AiAdviceDAO>();
 builder.Services.AddScoped<AiRequestDAO>();
@@ -70,9 +72,11 @@ builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 // PayOS config
 IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.Development.json").Build();
 
-PayOS payOS = new PayOS(configuration["Environment:PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find environment"),
-                    configuration["Environment:PAYOS_API_KEY"] ?? throw new Exception("Cannot find environment"),
-                    configuration["Environment:PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find environment"));
+PayOS payOS = new PayOS(
+    builder.Configuration["Environment:PAYOS_CLIENT_ID"] ?? "",
+    builder.Configuration["Environment:PAYOS_API_KEY"] ?? "",
+    builder.Configuration["Environment:PAYOS_CHECKSUM_KEY"] ?? ""
+);
 
 // Auth
 builder.Services.AddAuthentication(options =>
@@ -87,7 +91,7 @@ builder.Services.AddAuthentication(options =>
     opt.ExpireTimeSpan = TimeSpan.FromDays(14);
     opt.Cookie.HttpOnly = true;
     opt.Cookie.SameSite = SameSiteMode.Lax;
-});
+})
 
 builder.Services.AddAuthorization();
 builder.Services.AddSession(options =>
