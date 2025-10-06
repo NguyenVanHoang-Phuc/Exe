@@ -73,12 +73,21 @@
                                 <i class="fas fa-home me-1"></i>Trang chủ
                             </a>
                         </li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i
-                                    class="fas fa-wallet me-1"></i>Chi tiêu</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#goals"><i class="fas fa-bullseye me-1"></i>Mục
-                                tiêu</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#analytics"><i
-                                    class="fas fa-chart-line me-1"></i>Phân tích</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-tab="expenses">
+                                <i class="fas fa-wallet me-1"></i>Chi tiêu
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-tab="goals">
+                                <i class="fas fa-bullseye me-1"></i>Mục tiêu
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-tab="analytics">
+                                <i class="fas fa-chart-line me-1"></i>Phân tích
+                            </a>
+                        </li>
                     </ul>
                     <div class="d-flex align-items-center gap-3">
                         @if (signedIn)
@@ -169,15 +178,30 @@
                 </div>
             </nav>
 
-            <div class="container my-3">
-                <h5>Chi tiêu tháng này</h5>
-                <div class="d-flex align-items-center">
-                    <!-- Thanh tiến độ -->
-                    <div style="flex:1; height: 30px; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; position: relative;">
-                        <div id="finance-progress-bar" style="height: 100%; width: 100%; background-color: green; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
-                            <!-- Text ngay trên thanh -->
-                            <span id="finance-status-text"></span>
+            <div id="finance-container" style="
+            position: absolute;
+            top: 120px; /* Điều chỉnh giá trị này để thay đổi khoảng cách từ trên xuống */
+            left: 25%;
+            transform: translateX(-50%);
+            max-width: 672px;
+            width: 90%; /* Để khối responsive tốt hơn trên màn hình nhỏ */
+            background:white;
+            border-radius:16px;
+            box-shadow:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05);
+            padding:24px;
+            z-index: 1000; /* Đảm bảo nó nằm trên các phần tử khác */
+        ">
+                <h2 style="font-size:24px; font-weight:bold; color:#1f2937; margin:0 0 16px 0;">Chi tiêu tháng này</h2>
+
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div style="background:#e5e7eb; height:40px; border-radius:12px; overflow:hidden; position:relative;">
+                        <div id="finance-progress-bar" style="width:0%; height:100%; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:600; color:white; transition:width 0.7s cubic-bezier(0.4,0,0.2,1);">
+                            <span id="finance-status-text" style="padding:0 8px; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));"></span>
                         </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:14px;">
+                        <span id="finance-details" style="color:#4b5563;"></span>
+                        <span id="finance-percent" style="font-weight:bold; color:#1f2937;"></span>
                     </div>
                 </div>
             </div>
@@ -269,50 +293,61 @@
     <script src="~/lib/easing/easing.min.js"></script>
 
     <script>
-        (function ($) {
-        async function loadFinanceSummary(userId) {
+        async function loadFinanceSummary() {
             try {
-                const res = await fetch(`/api/budget/${userId}`);
+                const res = await fetch('/api/budget');
+                if (res.status === 401) return;
+
                 const data = await res.json();
-                console.log("Data từ API:", data);
-
-                const budget = data.budgetMonth ?? 0;
+                const budget = data.budgetMonth ?? 0; 
                 const spent = data.spentAmount ?? 0;
-                const remaining = budget - spent;
 
-                let percent = budget > 0 ? (remaining / budget) * 100 : 0;
-                percent = Math.max(0, Math.min(percent, 100)); // giới hạn 0–100
+                const progressBar = document.getElementById('finance-progress-bar');
+                const statusText = document.getElementById('finance-status-text');
+                const detailsText = document.getElementById('finance-details');
+                const percentText = document.getElementById('finance-percent');
 
-                const progressBar = document.getElementById("finance-progress-bar");
-                const statusText = document.getElementById("finance-status-text");
-
-                // Cập nhật width thanh còn lại
-                progressBar.style.width = `${percent}%`;
-
-                // Cập nhật màu theo mức còn lại
-                if (percent <= 20) {
-                    progressBar.style.backgroundColor = "red";
-                } else if (percent <= 40) {
-                    progressBar.style.backgroundColor = "orange";
-                } else if (percent <= 60) {
-                    progressBar.style.backgroundColor = "#e69500"; // cam đậm
-                } else if (percent <= 80) {
-                    progressBar.style.backgroundColor = "green";
-                } else {
-                    progressBar.style.backgroundColor = "#006400"; // xanh lá đậm
+                if (budget === 0) {
+                    // Trường hợp chưa có ngân sách
+                    progressBar.style.width = "100%";
+                    progressBar.style.background = "transparent";
+                    statusText.style.color = "#374151"; // chữ xám đậm
+                    statusText.textContent = "Hãy nhập ngân sách cho tháng này";
+                    detailsText.textContent = "";
+                    percentText.textContent = "";
+                    return;
                 }
 
-                // Hiển thị thông tin ngay trên thanh
-                statusText.textContent = `Còn lại: ${remaining.toLocaleString()} / ${budget.toLocaleString()} VND`;
+                // Nếu có ngân sách thì hiển thị progress bar
+                const remaining = budget - spent;
+                let percent = (remaining / budget) * 100;
+                percent = Math.max(0, Math.min(percent, 100));
 
-            } catch (err) {
-                console.error("Không thể load finance summary:", err);
+                if (percent <= 20) progressBar.style.background = 'linear-gradient(90deg,#dc2626,#ef4444)';
+                else if (percent <= 40) progressBar.style.background = 'linear-gradient(90deg,#ea580c,#f97316)';
+                else if (percent <= 60) progressBar.style.background = 'linear-gradient(90deg,#d97706,#f59e0b)';
+                else if (percent <= 80) progressBar.style.background = 'linear-gradient(90deg,#16a34a,#22c55e)';
+                else progressBar.style.background = 'linear-gradient(90deg,#15803d,#16a34a)';
+
+                statusText.style.color = "white";
+                statusText.textContent = `Còn lại: ${remaining.toLocaleString()} VND`;
+                detailsText.textContent = `Đã chi: ${spent.toLocaleString()} / ${budget.toLocaleString()} VND`;
+                percentText.textContent = `${percent.toFixed(1)}%`;
+                progressBar.style.width = `${percent}%`;
+
+                document.getElementById('finance-container').style.display = 'block';
+            } catch {
+                document.getElementById('finance-container').style.display = 'none';
             }
         }
 
-        // Gọi sau khi DOM sẵn sàng
-        document.addEventListener("DOMContentLoaded", () => loadFinanceSummary(1));
+        // ✅ phải gọi hàm thì nó mới chạy
+        document.addEventListener("DOMContentLoaded", loadFinanceSummary);
     </script>
+
+
+
+
     <script>
                         (function ($) {
             "use strict";
