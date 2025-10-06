@@ -9,6 +9,5 @@
 
         public string? Method { get; set; }
 
-        public string? Status { get; set; }
     }
 }

@@ -1,14 +1,19 @@
-﻿using System;
+﻿using BusinessObject.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static DataObject.PayOSDAO;
 
 namespace Service
 {
     public interface IPaymentService
     {
-        Task SavePaymentAsync(BusinessObject.Models.Payment payment);
-        Task<int> AddPaymentAsync(int userId, int planId, decimal amount, string status, string method);
+        Task<PaymentResult> CreatePaymentAsync(Payment payment);
+        Task SavePaymentAsync(Payment payment);
+        Task<int> AddPaymentAsync(int userId, decimal amount, string status, string method);
+        Task<PaymentResult> GetPaymentStatusAsync(string transactionId);
+        Task<List<int>> GetUserIdsWithSuccessfulPaymentsAsync();
     }
 }
