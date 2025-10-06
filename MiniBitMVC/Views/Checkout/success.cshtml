@@ -1,6 +1,13 @@
 @{
     ViewData["Title"] = "Đăng Nhập";
     Layout = null;
+    string orderCodeText = ViewData["OrderCode"]?.ToString();
+    string amountText = "";
+    if (ViewData["Amount"] != null)
+    {
+        try { amountText = string.Format("{0:N0} VND", Convert.ToDecimal(ViewData["Amount"])); }
+        catch { amountText = ViewData["Amount"]?.ToString(); }
+    }
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -67,11 +74,22 @@
 </head>
 <body>
     <div class="main-box">
-        <h4 class="payment-title">Thanh toán thành công. Cảm ơn bạn đã sử dụng payOS!</h4>
+        <h4 class="payment-title">Thanh toán thành công. Cảm ơn bạn!</h4>
+
+        @if (!string.IsNullOrEmpty(orderCodeText))
+        {
+            <p class="payment-message">Mã đơn (orderCode): <strong>@orderCodeText</strong></p>
+        }
+        @if (!string.IsNullOrEmpty(amountText))
+        {
+            <p class="payment-message">Số tiền: <strong>@amountText</strong></p>
+        }
+
         <p class="payment-message">
-            Nếu có bất kỳ câu hỏi nào, hãy gửi email tới <a href="mailto:support@payos.vn">support@payos.vn</a>.
+            Nếu cần hỗ trợ, hãy liên hệ <a href="mailto:support@payos.vn">support@payos.vn</a>.
         </p>
-        <a href="@Url.Action("Index", "Home")" id="return-page-btn">Trở về trang</a>
+
+        <a href="@Url.Action("Index", "Home")" id="return-page-btn">Trở về trang chủ</a>
     </div>
 </body>
 </html>

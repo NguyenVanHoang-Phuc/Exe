@@ -36,6 +36,7 @@ builder.Services.AddScoped<RoleDAO>();
 builder.Services.AddScoped<TransactionDAO>();
 builder.Services.AddScoped<UserDAO>();
 builder.Services.AddScoped<UserSubscriptionDAO>();
+builder.Services.AddScoped<PayOSDAO>();
 
 builder.Services.AddScoped<IAiAdviceRepository, AiAdviceRepository>();
 builder.Services.AddScoped<IAiRequestRepository, AiRequestRepository>();
@@ -74,19 +75,14 @@ PayOS payOS = new PayOS(configuration["Environment:PAYOS_CLIENT_ID"] ?? throw ne
                     configuration["Environment:PAYOS_API_KEY"] ?? throw new Exception("Cannot find environment"),
                     configuration["Environment:PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find environment"));
 
+builder.Services.AddHttpClient();
 // Auth
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-})
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 .AddCookie(opt =>
 {
     opt.LoginPath = "/Account/Login";
     opt.LogoutPath = "/Account/Logout";
     opt.SlidingExpiration = true;
-    opt.ExpireTimeSpan = TimeSpan.FromDays(14);
-    opt.Cookie.HttpOnly = true;
-    opt.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.AddAuthorization();
