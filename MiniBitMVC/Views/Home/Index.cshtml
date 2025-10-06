@@ -654,10 +654,9 @@
                             premiumContent.style.display = "none";
                         }
 
-                        // Click nâng cấp Premium (demo)
                         premiumPromo.querySelector("button")?.addEventListener("click", () => {
-                            premiumPromo.style.display = "none";
-                            premiumContent.style.display = "block";
+                            const premiumModal = new bootstrap.Modal(document.getElementById('premiumModal'));
+                            premiumModal.show();
                         });
                     }
                 });

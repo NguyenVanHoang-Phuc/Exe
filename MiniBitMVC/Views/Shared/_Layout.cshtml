@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -35,17 +36,17 @@
 
 <body>
     @{
-    var signedIn = User?.Identity?.IsAuthenticated ?? false;
-    var userName = User?.Identity?.Name ?? "Tài khoản";
+        var signedIn = User?.Identity?.IsAuthenticated ?? false;
+        var userName = User?.Identity?.Name ?? "Tài khoản";
 
-    // Premium theo Role/Claim (không cần DI)
-    var isPremium =
-    (User?.IsInRole("Premium") ?? false) ||
-    (User?.HasClaim("is_premium","true") ?? false) ||
-    (User?.HasClaim("IsPremium","true") ?? false);
+         // Lấy thông tin Premium từ claims
+       var isPremium = User?.HasClaim("IsPremium", "true") ?? false;
 
-    // Số thông báo chưa đọc (controller có thể set ViewBag.UnreadCount; mặc định 0)
-    var unread = (int?)ViewBag.UnreadCount ?? 0;
+        // Lấy userId từ cookie authentication (claims)
+        var userIdFromCookie = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // Số thông báo chưa đọc (controller có thể set ViewBag.UnreadCount; mặc định 0)
+        var unread = (int?)ViewBag.UnreadCount ?? 0;
     }
     <!-- Header Start -->
     <header class="minibit-header">
@@ -120,15 +121,10 @@
                             <button class="btn btn-outline-primary dropdown-toggle" type="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-user me-1"></i>@userName
-                                @if (Context.Session.GetInt32("IsPremium") == 1)
-                                {
-                                <span class="badge bg-warning text-dark ms-2">
-                                    <i class="fas fa-crown me-1"></i>Premium
-                                </span>
-                                }
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Cài đặt</a>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Profile", "Account")"><i class="fas fa-user-cog me-2"></i>Cài đặt</a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item"
@@ -152,20 +148,20 @@
                         </div>
 
                         <!-- Premium -->
-                        @if (!isPremium)
-                        {
-                        <button class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#premiumModal">
-                            <i class="fas fa-crown me-2"></i>
-                            <span id="premiumText">Nâng cấp Premium</span>
-                            <small class="d-block">29k/tháng</small>
-                        </button>
-                        }
-                        else
-                        {
-                        <a class="btn btn-warning text-dark disabled" tabindex="-1" aria-disabled="true">
-                            <i class="fas fa-crown me-2"></i> Premium
-                        </a>
-                        }
+                            @if (isPremium)
+                            {
+                                <a class="btn btn-success text-dark disabled" tabindex="-1" aria-disabled="true">
+                                    <i class="fas fa-crown me-2"></i> Premium
+                                </a>
+                            }
+                            else
+                            {
+                                <button class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#premiumModal">
+                                    <i class="fas fa-crown me-2"></i>
+                                    <span id="premiumText">Nâng cấp Premium</span>
+                                    <small class="d-block">29k/tháng</small>
+                                </button>
+                            }
                         }
                         else
                         {
@@ -400,5 +396,4 @@
     @await Html.PartialAsync("_PartialViews/_PremiumModal")
 
 </body>
-
 </html>

@@ -38,6 +38,7 @@ builder.Services.AddScoped<RoleDAO>();
 builder.Services.AddScoped<TransactionDAO>();
 builder.Services.AddScoped<UserDAO>();
 builder.Services.AddScoped<UserSubscriptionDAO>();
+builder.Services.AddScoped<PayOSDAO>();
 
 builder.Services.AddScoped<IAiAdviceRepository, AiAdviceRepository>();
 builder.Services.AddScoped<IAiRequestRepository, AiRequestRepository>();
@@ -78,19 +79,14 @@ PayOS payOS = new PayOS(
     builder.Configuration["Environment:PAYOS_CHECKSUM_KEY"] ?? ""
 );
 
+builder.Services.AddHttpClient();
 // Auth
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-})
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 .AddCookie(opt =>
 {
     opt.LoginPath = "/Account/Login";
     opt.LogoutPath = "/Account/Logout";
     opt.SlidingExpiration = true;
-    opt.ExpireTimeSpan = TimeSpan.FromDays(14);
-    opt.Cookie.HttpOnly = true;
-    opt.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.AddAuthorization();
@@ -111,7 +107,7 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(
         policy =>
         {
-            policy.WithOrigins("https://localhost:44343", "https://localhost:44344")
+            policy.WithOrigins("https://localhost:44343", "https://localhost:44344", "http://localhost:5081")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -126,9 +122,14 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseRouting();
 
-app.UseSession();
+// 🔥 Cực kỳ quan trọng: cookie policy trước auth
+app.UseCookiePolicy();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+// session luôn sau auth
+app.UseSession();
 
 app.MapStaticAssets();
 

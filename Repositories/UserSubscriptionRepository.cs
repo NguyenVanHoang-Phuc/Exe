@@ -1,4 +1,5 @@
-﻿using DataObject;
+﻿using BusinessObject.Models;
+using DataObject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +16,10 @@ namespace Repositories
         {
             _dao = dao;
         }
+        public async Task<UserSubscription> GetActiveSubscriptionAsync(int userId) => await _dao.GetActiveSubscriptionAsync(userId);
 
         public Task<bool> HasActiveAsync(int userId) => _dao.HasActiveAsync(userId);
 
-        public async Task UpsertActivateAsync(int userId, int planId, int months, decimal amount) => await _dao.UpsertActivateAsync(userId, planId, months, amount);
+        public async Task UpsertActivateAsync(int userId, int months, decimal amount) => await _dao.UpsertActivateAsync(userId, months, amount);
     }
 }
