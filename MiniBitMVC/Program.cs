@@ -69,7 +69,7 @@ builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 // PayOS config
-IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.Development.json").Build();
+IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
 PayOS payOS = new PayOS(configuration["Environment:PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find environment"),
                     configuration["Environment:PAYOS_API_KEY"] ?? throw new Exception("Cannot find environment"),
@@ -103,7 +103,7 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(
         policy =>
         {
-            policy.WithOrigins("https://localhost:44343", "https://localhost:44344")
+            policy.WithOrigins("https://localhost:44343", "https://localhost:44344", "http://localhost:5081")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -118,9 +118,14 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseRouting();
 
-app.UseSession();
+// 🔥 Cực kỳ quan trọng: cookie policy trước auth
+app.UseCookiePolicy();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+// session luôn sau auth
+app.UseSession();
 
 app.MapStaticAssets();
 

@@ -56,9 +56,8 @@ namespace MiniBitMVC.Controllers
             var isPremium = await _userSubscriptionService.HasActiveAsync(user.UserId);
             await SignInLocalAsync(user, model.RememberMe, isPremium);
 
-            var userIdFromCookie = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            Console.WriteLine($"userId từ cookie: {userIdFromCookie}");
-
+            Console.WriteLine($"User vừa đăng nhập: {user.UserId}");
+            HttpContext.Session.SetInt32("UserId", user.UserId);
             HttpContext.Session.SetInt32("IsPremium", isPremium ? 1 : 0);
 
             if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
