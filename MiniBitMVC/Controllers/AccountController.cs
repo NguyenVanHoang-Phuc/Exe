@@ -59,6 +59,7 @@ namespace MiniBitMVC.Controllers
 
             Console.WriteLine($"User vừa đăng nhập: {user.UserId}");
             HttpContext.Session.SetInt32("UserId", user.UserId);
+            HttpContext.Session.SetString("UserName", user.Name);
             HttpContext.Session.SetInt32("IsPremium", isPremium ? 1 : 0);
 
             if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
