@@ -54,13 +54,14 @@
             </div>
         </div>
 
-        @if (Model.IsPremium)
-        {
+        
             <!-- 2) Thông tin tài chính (tùy chọn) + 3) Dữ liệu cá nhân -->
             <div class="profile-card">
                 <div class="card-header">
                     <i class="fas fa-database me-2"></i>Dữ liệu cá nhân
                 </div>
+            @if (Model != null && Model.IsPremium)
+            {
                 <div class="card-body">
                     <div class="stats-grid">
                         <div class="stat">
@@ -87,8 +88,15 @@
                         <i class="fas fa-lightbulb me-2"></i> Đang tổng hợp dữ liệu…
                     </div>
                 </div>
+                }
+        else
+        {
+            <!-- Hiển thị thông báo nếu chưa phải Premium -->
+            <div class="alert alert-warning mt-3">
+                <i class="fas fa-exclamation-triangle me-2"></i> Bạn cần nâng cấp lên tài khoản Premium để truy cập các dữ liệu này.
             </div>
         }
+            </div>
     </div>
 </div>
 

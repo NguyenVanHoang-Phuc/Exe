@@ -29,22 +29,6 @@ namespace MiniBitMVC.Controllers
         {
             return View();
         }
-
-        [HttpPost]
-        public async Task<IActionResult> ActivatePremium(int userId, int planId, int months, decimal amount)
-        {
-            try
-            {
-                await _userSubscriptionService.UpsertActivateAsync(userId, planId, months, amount);
-                return RedirectToAction("Index", "Home");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return View("HomePage");
-            }
-        }
-
         [HttpGet]
         [AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
@@ -69,30 +53,39 @@ namespace MiniBitMVC.Controllers
                 ViewBag.Error = "Email hoặc mật khẩu không đúng.";
                 return View(model);
             }
-            await SignInLocalAsync(user);
-
-            HttpContext.Session.SetInt32("UserId", user.UserId);
-            HttpContext.Session.SetString("UserName", user.Name);
             var isPremium = await _userSubscriptionService.HasActiveAsync(user.UserId);
+            await SignInLocalAsync(user, model.RememberMe, isPremium);
+
+            var userIdFromCookie = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Console.WriteLine($"userId từ cookie: {userIdFromCookie}");
+
             HttpContext.Session.SetInt32("IsPremium", isPremium ? 1 : 0);
+
             if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 return Redirect(model.ReturnUrl);
 
             return RedirectToAction("Index", "Home");
         }
 
-        private async Task SignInLocalAsync(User user)
+
+        private async Task SignInLocalAsync(User user, bool rememberMe, bool isPremium)
         {
             var claims = new List<Claim>
     {
         new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
         new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-        new Claim(ClaimTypes.Name, user.Name ?? string.Empty)
+        new Claim(ClaimTypes.Name, user.Name ?? string.Empty),
+        new Claim("IsPremium", isPremium ? "true" : "false")
     };
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal,
-                new AuthenticationProperties { IsPersistent = true, AllowRefresh = true });
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = rememberMe,  // Dùng giá trị rememberMe từ LoginFormViewModel
+                ExpiresUtc = DateTime.UtcNow.AddDays(7)  // Thời gian sống của cookie
+            };
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
         }
 
         [HttpPost]
@@ -100,7 +93,7 @@ namespace MiniBitMVC.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("HomePage", "Account");
         }
 
         [HttpPost]
@@ -184,20 +177,26 @@ namespace MiniBitMVC.Controllers
 
         public async Task<IActionResult> Profile()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
+            var userIdFromCookie = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (userId == null)
+            if (string.IsNullOrEmpty(userIdFromCookie) || !int.TryParse(userIdFromCookie, out var userId))
             {
+                // Nếu không tìm thấy userId trong cookie, điều hướng đến trang đăng nhập
                 return RedirectToAction("Login");
             }
 
-            // Kiểm tra xem người dùng có trạng thái "active" hay không
-            var isPremium = await _userSubscriptionService.HasActiveAsync(userId.Value);
+            // Kiểm tra xem người dùng có đang là premium không
+            var isPremium = await _userSubscriptionService.HasActiveAsync(userId);
 
-            // Truyền thông tin vào ViewBag hoặc session để hiển thị trên header
-            ViewBag.IsPremium = isPremium;
+            // Tạo model để truyền vào View
+            var model = new ProfileViewModel
+            {
+                IsPremium = isPremium,
 
-            return View();
+            };
+
+            // Trả về view với model
+            return View(model);
         }
 
     }

@@ -5,7 +5,7 @@
         // Thông tin cơ bản từ User
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public bool IsPremium { get; set; }  // Trạng thái Premium (được lấy từ UserSubscription)
+        public bool IsPremium { get; set; } 
 
         // Các thông tin cá nhân (User)
         public string Phone { get; set; } = string.Empty;

@@ -1,4 +1,5 @@
 ﻿using BusinessObject.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace DataObject
         {
             try
             {
-                // Thêm thanh toán vào cơ sở dữ liệu
+
                 _context.Payments.Add(payment);
                 await _context.SaveChangesAsync();
             }
@@ -30,23 +31,43 @@ namespace DataObject
             }
         }
 
-        public async Task<int> AddPaymentAsync(int userId, int planId, decimal amount, string status, string method)
+        public async Task<int> AddPaymentAsync(int userId, decimal amount, string status, string method)
         {
             var payment = new Payment
             {
                 UserId = userId,
-                PlanId = planId,
                 Amount = amount,
-                Currency = "VND", // Hoặc lấy từ thông tin người dùng
-                PaymentDate = DateTime.UtcNow,
-                Status = status, // "paid" hoặc "failed"
-                Method = method, // Ví dụ: "credit_card", "paypal", v.v.
+                Status = status,
+                Method = method,
+                Currency = "VND", 
+                PaymentDate = DateTime.UtcNow
             };
 
             _context.Payments.Add(payment);
-            await _context.SaveChangesAsync(); // Lưu vào cơ sở dữ liệu
+            await _context.SaveChangesAsync();
 
-            return payment.PaymentId; // Trả về ID của payment vừa tạo
+            var userSubscription = new UserSubscription
+            {
+                UserId = userId,
+                PaymentId = payment.PaymentId, 
+                Status = "Active",  
+                StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(1)) 
+            };
+
+            _context.UserSubscriptions.Add(userSubscription);
+            await _context.SaveChangesAsync();  
+
+            return payment.PaymentId;
+        }
+
+        public async Task<List<int>> GetUserIdsWithSuccessfulPaymentsAsync()
+        {
+            return await _context.Payments
+                .Where(p => p.Status == "active")
+                .Select(p => p.UserId)
+                .Distinct()
+                .ToListAsync();
         }
     }
 }

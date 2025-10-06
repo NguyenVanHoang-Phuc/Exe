@@ -9,10 +9,6 @@ public partial class Payment
 
     public int UserId { get; set; }
 
-    public int? SubscriptionId { get; set; }
-
-    public int PlanId { get; set; }
-
     public decimal Amount { get; set; }
 
     public string? Currency { get; set; }
@@ -23,9 +19,7 @@ public partial class Payment
 
     public string? Status { get; set; }
 
-    public virtual PremiumPlan Plan { get; set; } = null!;
-
-    public virtual UserSubscription? Subscription { get; set; }
-
     public virtual User User { get; set; } = null!;
+
+    public virtual ICollection<UserSubscription> UserSubscriptions { get; set; } = new List<UserSubscription>();
 }
