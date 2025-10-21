@@ -13,5 +13,9 @@ namespace Repositories
         Task DeleteRangeAsync(List<Budget> budgets);
         Task<Budget?> GetBudgetByUserIdAsync(int userId);
         Task<Budget?> GetBudgetByUserMonthYearAsync(int userId, int month, int year);
+        Task UpdateAsync(Budget budget);
+        Task DeleteAsync(Budget budget);
+        Task<IEnumerable<Budget>> GetAllByUserIdAsync(int userId);
+        Task<Budget> GetByIdAsync(int id);
     }
 }

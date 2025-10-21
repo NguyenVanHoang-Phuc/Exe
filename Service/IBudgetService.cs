@@ -14,5 +14,9 @@ namespace Service
         Task DeleteRangeAsync(List<Budget> budgets);
         Task<Budget?> GetBudgetByUserMonthYearAsync(int userId, int month, int year);
         Task AddBudgetsForMonthsAsync(int userId, decimal amountLimit, int startMonth, int endMonth, int year);
+        Task UpdateAsync(Budget budget);
+        Task DeleteAsync(Budget budget);
+        Task<IEnumerable<Budget>> GetAllByUserIdAsync(int userId);
+        Task<Budget> GetByIdAsync(int id);
     }
 }

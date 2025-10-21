@@ -293,13 +293,25 @@
     <script src="~/lib/easing/easing.min.js"></script>
 
     <script>
-        async function loadFinanceSummary() {
-            try {
-                const res = await fetch('/api/budget');
-                if (res.status === 401) return;
+        async function fetchBudgetSummary() {
+            const res = await fetch('/api/budget');
+            if (!res.ok) throw new Error("Không thể tải dữ liệu ngân sách");
+            return res.json();
+        }
 
-                const data = await res.json();
-                const budget = data.budgetMonth ?? 0; 
+        function getProgressColor(percent) {
+            if (percent <= 20) return 'linear-gradient(90deg,#dc2626,#ef4444)';
+            if (percent <= 40) return 'linear-gradient(90deg,#ea580c,#f97316)';
+            if (percent <= 60) return 'linear-gradient(90deg,#d97706,#f59e0b)';
+            if (percent <= 80) return 'linear-gradient(90deg,#16a34a,#22c55e)';
+            return 'linear-gradient(90deg,#15803d,#16a34a)';
+        }
+
+        window.loadFinanceSummary = async function () {
+            const container = document.getElementById('finance-container');
+            try {
+                const data = await fetchBudgetSummary();
+                const budget = data.budgetMonth ?? 0;
                 const spent = data.spentAmount ?? 0;
 
                 const progressBar = document.getElementById('finance-progress-bar');
@@ -308,41 +320,34 @@
                 const percentText = document.getElementById('finance-percent');
 
                 if (budget === 0) {
-                    // Trường hợp chưa có ngân sách
                     progressBar.style.width = "100%";
                     progressBar.style.background = "transparent";
-                    statusText.style.color = "#374151"; // chữ xám đậm
+                    statusText.style.color = "#374151";
                     statusText.textContent = "Hãy nhập ngân sách cho tháng này";
                     detailsText.textContent = "";
                     percentText.textContent = "";
                     return;
                 }
 
-                // Nếu có ngân sách thì hiển thị progress bar
                 const remaining = budget - spent;
                 let percent = (remaining / budget) * 100;
                 percent = Math.max(0, Math.min(percent, 100));
 
-                if (percent <= 20) progressBar.style.background = 'linear-gradient(90deg,#dc2626,#ef4444)';
-                else if (percent <= 40) progressBar.style.background = 'linear-gradient(90deg,#ea580c,#f97316)';
-                else if (percent <= 60) progressBar.style.background = 'linear-gradient(90deg,#d97706,#f59e0b)';
-                else if (percent <= 80) progressBar.style.background = 'linear-gradient(90deg,#16a34a,#22c55e)';
-                else progressBar.style.background = 'linear-gradient(90deg,#15803d,#16a34a)';
-
+                progressBar.style.background = getProgressColor(percent);
+                progressBar.style.width = `${percent}%`;
                 statusText.style.color = "white";
                 statusText.textContent = `Còn lại: ${remaining.toLocaleString()} VND`;
                 detailsText.textContent = `Đã chi: ${spent.toLocaleString()} / ${budget.toLocaleString()} VND`;
                 percentText.textContent = `${percent.toFixed(1)}%`;
-                progressBar.style.width = `${percent}%`;
 
-                document.getElementById('finance-container').style.display = 'block';
-            } catch {
-                document.getElementById('finance-container').style.display = 'none';
+                container.style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                container.style.display = 'none';
             }
-        }
+        };
 
-        // ✅ phải gọi hàm thì nó mới chạy
-        document.addEventListener("DOMContentLoaded", loadFinanceSummary);
+        document.addEventListener("DOMContentLoaded", window.loadFinanceSummary);
     </script>
 
 

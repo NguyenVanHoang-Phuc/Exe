@@ -63,6 +63,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="budget-tab" data-bs-toggle="pill" data-bs-target="#budget" type="button" role="tab">
+                <i class="fas fa-coins me-2"></i>Ngân sách
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="goals-tab" data-bs-toggle="pill" data-bs-target="#goals" type="button" role="tab">
                 <i class="fas fa-bullseye me-2"></i>Mục tiêu
             </button>
@@ -236,9 +241,6 @@
                                 </div>
                             </form>
                         </div>
-                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
-                            <i class="fas fa-wallet me-1"></i>Thêm Ngân sách
-                        </button>
                         <div class="d-flex gap-2">
                             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
                                 <i class="fas fa-plus me-1"></i>Thêm chi tiêu
@@ -321,7 +323,23 @@
             </button>
         </div>
 
-
+       <!-- Budget Tab -->
+        <div class="tab-pane fade" id="budget" role="tabpanel">
+            <div class="card minibit-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-coins me-2"></i>Ngân sách của tôi</h5>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
+                        <i class="fas fa-plus me-1"></i>Thêm ngân sách
+                    </button>
+                </div>
+                <div class="card-body" id="budgetList">
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-wallet fa-3x mb-3"></i>
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Goals Tab -->
         <div class="tab-pane fade" id="goals" role="tabpanel">
@@ -727,7 +745,7 @@
                 }
 
                 
-                loadAnalytics(userId;
+                loadAnalytics(userId);
             </script>
 
 
@@ -1225,42 +1243,6 @@
             </script>
 
             <script>
-                // add budget
-                document.getElementById("addBudgetForm").addEventListener("submit", async (e) => {
-                    e.preventDefault();
-
-                    const data = {
-                        userId: userId,
-                        amountLimit: parseFloat(document.getElementById("amountLimit").value),
-                        startMonth: parseInt(document.getElementById("startMonth").value),
-                        endMonth: parseInt(document.getElementById("endMonth").value),
-                        year: parseInt(document.getElementById("year").value)
-                    };
-
-                    try {
-                        const res = await fetch("/api/budget/add-range", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify(data)
-                        });
-
-                        if (res.ok) {
-                            alert("Thêm ngân sách thành công!");
-                            location.reload(); // reload lại để cập nhật view
-                        } else {
-                            const err = await res.json();
-                            alert("Lỗi: " + (err.title || "Không thể thêm ngân sách"));
-                        }
-                    } catch (error) {
-                        console.error("Error:", error);
-                        alert("Có lỗi khi gọi API.");
-                    }
-                });
-            </script>
-
-            <script>
                 document.addEventListener("DOMContentLoaded", function () {
                     const urlParams = new URLSearchParams(window.location.search);
                     const tab = urlParams.get("tab");
@@ -1273,6 +1255,224 @@
                     }
                 });
             </script>
+
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+            <script>
+            window.loadFinanceSummary = function () {
+                    $.ajax({
+                        url: "/api/budget",
+                        type: "GET",
+                        success: function (res) {
+                            $("#budgetAmount").text(res.budgetMonth.toLocaleString("vi-VN") + "đ");
+                            $("#spentAmount").text(res.spentAmount.toLocaleString("vi-VN") + "đ");
+
+                            const percent = res.budgetMonth > 0
+                                ? Math.min((res.spentAmount / res.budgetMonth) * 100, 100).toFixed(1)
+                                : 0;
+
+                            const progressBar = $("#budgetProgressBar");
+                            progressBar.css("width", percent + "%");
+
+                            if (percent >= 100) progressBar.removeClass().addClass("progress-bar bg-danger");
+                            else if (percent >= 80) progressBar.removeClass().addClass("progress-bar bg-warning");
+                            else progressBar.removeClass().addClass("progress-bar bg-success");
+
+                            $("#budgetPercent").text(percent + "%");
+                        },
+                        error: function (err) {
+                            console.error("❌ Lỗi khi tải tổng quan ngân sách:", err);
+                        }
+                    });
+                };
+
+            $(document).ready(function () {
+                const userId = @userIdFromSession;
+
+                // === Khi vào trang, tải dữ liệu ngân sách và tổng quan ===
+                loadBudgets(userId);
+                loadFinanceSummary();
+
+                // === Submit form thêm ngân sách ===
+                $("#addBudgetForm").submit(function (e) {
+                    e.preventDefault();
+
+                    const data = {
+                        amountLimit: Number($("#amountLimit").val()),
+                        startMonth: parseInt($("#startMonth").val()),
+                        endMonth: parseInt($("#endMonth").val()),
+                        year: parseInt($("#year").val())
+                    };
+
+                    if (data.startMonth > data.endMonth) {
+                        Swal.fire("Lỗi", "❌ Tháng bắt đầu không thể lớn hơn tháng kết thúc!", "error");
+                        return;
+                    }
+
+                    $.ajax({
+                            url: "/api/budget/create",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(data),
+                        success: function (res) {
+                            Swal.fire("Thành công", res.message, "success");
+                            $("#addBudgetForm")[0].reset();
+                            $("#addBudgetModal").modal("hide");
+                            loadBudgets(userId);
+                            loadFinanceSummary();
+                        },
+                        error: function (err) {
+                            console.error("❌ Lỗi khi thêm ngân sách:", err);
+                            Swal.fire("Lỗi", "Không thể thêm ngân sách. Vui lòng thử lại!", "error");
+                        }
+                    });
+                });
+
+                // === Load tất cả ngân sách ===
+                function loadBudgets(userId) {
+                    $.ajax({
+                        url: `/api/budget/user/${userId}`,
+                        type: "GET",
+                        success: function (res) {
+                            renderBudgets(res);
+                        },
+                        error: function (err) {
+                            console.error("❌ Lỗi khi tải ngân sách:", err);
+                            $("#budgetList").html(`<p class="text-danger text-center">Không thể tải danh sách ngân sách.</p>`);
+                        }
+                    });
+                }
+
+                // === Render danh sách ngân sách ===
+                function renderBudgets(budgets) {
+                    const container = $("#budgetList");
+                    container.empty();
+
+                    if (!budgets || budgets.length === 0) {
+                        container.html(`<p class="text-muted text-center">Chưa có ngân sách nào được tạo.</p>`);
+                        return;
+                    }
+
+                    budgets.forEach(b => {
+                        const spent = b.spentAmount || 0;
+                        const limit = b.amountLimit || 0;
+                        const progress = limit > 0 ? Math.min((spent / limit) * 100, 100).toFixed(1) : 0;
+
+                        const color = progress >= 100 ? "bg-danger"
+                                    : progress >= 80 ? "bg-warning"
+                                    : "bg-success";
+
+                        const card = `
+                            <div class="card mb-3 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">Tháng ${b.month}/${b.year}</h6>
+                                            <p class="mb-0 text-muted">
+                                                Giới hạn: <strong>${limit.toLocaleString("vi-VN")}đ</strong>
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary edit-budget" 
+                                                    data-id="${b.budgetId}" data-limit="${limit}" 
+                                                    data-month="${b.month}" data-year="${b.year}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger delete-budget" 
+                                                    data-id="${b.budgetId}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="progress mt-3" style="height: 10px;">
+                                        <div class="progress-bar ${color}" style="width: ${progress}%"></div>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        Đã chi: ${spent.toLocaleString("vi-VN")}đ (${progress}%)
+                                    </small>
+                                </div>
+                            </div>`;
+                        container.append(card);
+                    });
+                }
+
+                // === Xóa ngân sách ===
+                $(document).on("click", ".delete-budget", function () {
+                    const budgetId = $(this).data("id");
+
+                    Swal.fire({
+                        title: "Xác nhận",
+                        text: "Bạn có chắc muốn xóa ngân sách này?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Xóa",
+                        cancelButtonText: "Hủy",
+                    }).then((result) => {
+                        if (!result.isConfirmed) return;
+
+                        $.ajax({
+                            url: `/api/budget/delete/${budgetId}`,
+                            type: "DELETE",
+                            success: function (res) {
+                                Swal.fire("Đã xóa", res.message, "success");
+                                loadBudgets(userId);
+                                loadFinanceSummary();
+                            },
+                            error: function (err) {
+                                console.error("❌ Lỗi khi xóa ngân sách:", err);
+                                Swal.fire("Lỗi", "Không thể xóa ngân sách!", "error");
+                            }
+                        });
+                    });
+                });
+
+                // === Sửa ngân sách ===
+                $(document).on("click", ".edit-budget", function () {
+                    const id = $(this).data("id");
+                    const oldLimit = $(this).data("limit");
+                    const oldMonth = $(this).data("month");
+                    const oldYear = $(this).data("year");
+
+                    Swal.fire({
+                        title: `Sửa ngân sách tháng ${oldMonth}/${oldYear}`,
+                        input: "number",
+                        inputLabel: "Nhập giới hạn mới:",
+                        inputValue: oldLimit,
+                        showCancelButton: true,
+                        confirmButtonText: "Cập nhật",
+                        cancelButtonText: "Hủy",
+                        inputValidator: (value) => {
+                            if (!value || isNaN(value) || value <= 0) return "Giới hạn phải là số > 0!";
+                        }
+                    }).then(result => {
+                        if (!result.isConfirmed) return;
+                        const newLimit = parseFloat(result.value);
+
+                        $.ajax({
+                            url: `/api/budget/update/${id}`,
+                            type: "PUT",
+                            contentType: "application/json",
+                            data: JSON.stringify({
+                                amountLimit: newLimit,
+                                month: oldMonth,
+                                year: oldYear
+                            }),
+                            success: function (res) {
+                                Swal.fire("Thành công", res.message, "success");
+                                loadBudgets(userId);
+                                loadFinanceSummary();
+                            },
+                            error: function (err) {
+                                console.error("❌ Lỗi khi cập nhật ngân sách:", err);
+                                Swal.fire("Lỗi", "Không thể cập nhật ngân sách!", "error");
+                            }
+                        });
+                    });
+                });
+            });
+            </script>
+
 
 }
 

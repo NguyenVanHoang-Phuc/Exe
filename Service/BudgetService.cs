@@ -67,5 +67,21 @@ namespace Service
                 await _budgetRepository.AddRangeAsync(budgets);
             }
         }
+        public async Task UpdateAsync(Budget budget)
+        {
+            await _budgetRepository.UpdateAsync(budget);
+        }
+        public async Task DeleteAsync(Budget budget)
+        {
+            await _budgetRepository.DeleteAsync(budget);
+        }
+        public async Task<IEnumerable<Budget>> GetAllByUserIdAsync(int userId)
+        {
+            return await _budgetRepository.GetAllByUserIdAsync(userId);
+        }
+        public async Task<Budget> GetByIdAsync(int id)
+        {
+            return await _budgetRepository.GetByIdAsync(id);
+        }
     }
 }

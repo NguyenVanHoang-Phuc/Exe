@@ -62,5 +62,12 @@
             public int EndMonth { get; set; }
             public int Year { get; set; }
         }
+
+        public class UpdateBudgetDto
+        {
+            public decimal AmountLimit { get; set; }
+            public int Month { get; set; }
+            public int Year { get; set; }
+        }
     }
 }

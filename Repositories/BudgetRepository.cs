@@ -33,5 +33,23 @@ namespace Repositories
         {
             return await _budgetDAO.GetBudgetByUserMonthYearAsync(userId, month, year);
         }
+
+        public async Task UpdateAsync(Budget budget)
+        {
+            await _budgetDAO.UpdateAsync(budget);
+        }
+        public async Task DeleteAsync(Budget budget)
+        {
+            await _budgetDAO.DeleteAsync(budget);
+        }
+        public async Task<IEnumerable<Budget>> GetAllByUserIdAsync(int userId)
+        {
+            return await _budgetDAO.GetAllByUserIdAsync(userId);
+        }
+
+        public async Task<Budget> GetByIdAsync(int id)
+        {
+            return await _budgetDAO.GetByIdAsync(id);
+        }
     }
 }

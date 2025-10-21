@@ -46,5 +46,32 @@ namespace DataObject
                 .FirstOrDefaultAsync(b => b.UserId == userId && b.Month == month && b.Year == year);
         }
 
+
+        public async Task UpdateAsync(Budget budget)
+        {
+            _context.Budgets.Update(budget);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(Budget budget)
+        {
+            _context.Budgets.Remove(budget);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Budget>> GetAllByUserIdAsync(int userId)
+        {
+            return await _context.Budgets
+                .Where(b => b.UserId == userId)
+                .OrderByDescending(b => b.Year)
+                .ThenByDescending(b => b.Month)
+                .ThenByDescending(b => b.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<Budget> GetByIdAsync(int id)
+        {
+            return await _context.Budgets.FindAsync(id);
+        }
     }
 }
