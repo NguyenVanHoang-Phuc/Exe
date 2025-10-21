@@ -867,21 +867,10 @@
             </script>
 
             <script>
-                // Hàm định dạng tin nhắn và xóa mọi dấu *
+                // ✅ Hàm định dạng tin nhắn, loại bỏ dấu * và xuống dòng
                 function formatMessageText(responseText) {
                     if (!responseText) return "";
-                    // 1. Xóa tất cả dấu *
                     const clean = responseText.replace(/\*/g, "");
-                    // 2. Chuyển mỗi dòng thành <p>
-                    return clean
-                        .split("\n")
-                        .map(line => line.trim())
-                        .filter(line => line.length > 0)
-                        .map(line => `<p>${line}</p>`)
-                        .join("");
-                }
-
-                    // 3. Xuống dòng thành <p>
                     return clean
                         .split("\n")
                         .map(line => line.trim())
@@ -896,7 +885,7 @@
                     const question = input.value.trim();
                     if (!question) return;
 
-                    // Hiển thị câu hỏi của user
+                    // ✅ Hiển thị câu hỏi của người dùng
                     history.innerHTML += `
                         <div class="text-end mb-2">
                             <span class="badge bg-primary">${question}</span>
@@ -904,30 +893,49 @@
                     input.value = "";
                     history.scrollTop = history.scrollHeight;
 
+                    // ✅ Hiển thị trạng thái đang tải
+                    const loadingId = `loading-${Date.now()}`;
+                    history.innerHTML += `
+                        <div id="${loadingId}" class="text-start text-muted small mb-2">
+                            <i class="fas fa-spinner fa-spin"></i> Đang phân tích dữ liệu...
+                        </div>`;
+                    history.scrollTop = history.scrollHeight;
+
                     try {
-                        // Gọi API bot
+                        // ✅ Gọi API bot (backend nhận string nên gửi JSON.stringify(question))
                         const res = await fetch(`/api/AI/advice/${userId}`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify(question)
                         });
+
+                        // Nếu server không phản hồi 200
+                        if (!res.ok) {
+                            throw new Error(`HTTP ${res.status}`);
+                        }
+
                         const data = await res.json();
                         console.log("👉 Data từ server:", data);
 
-                        // Hiển thị câu trả lời
+                        // ✅ Xóa dòng loading
+                        document.getElementById(loadingId)?.remove();
+
+                        // ✅ Hiển thị câu trả lời
                         history.innerHTML += `
-                             <div class="text-start mb-2">
+                            <div class="text-start mb-2">
                                 <div class="p-2 rounded bg-light text-dark" style="white-space: normal;">
-                                    ${formatMessageText(data.advice)}
+                                    ${formatMessageText(data.advice || "Không có phản hồi từ bot.")}
                                 </div>
                             </div>`;
                         history.scrollTop = history.scrollHeight;
                     } catch (e) {
+                        console.error("❌ Lỗi:", e);
+                        document.getElementById(loadingId)?.remove();
                         history.innerHTML += `<div class="text-danger small">❌ Lỗi kết nối bot</div>`;
                     }
                 });
 
-                // Quick question click handler
+                // ✅ Gợi ý nhanh
                 document.querySelectorAll("#quickQuestions button").forEach(btn => {
                     btn.addEventListener("click", () => {
                         document.getElementById("chatInput").value = btn.textContent;
@@ -935,6 +943,7 @@
                     });
                 });
             </script>
+
 
             <script>
                 
