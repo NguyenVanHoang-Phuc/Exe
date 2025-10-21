@@ -134,6 +134,22 @@ namespace MiniBitMVC.Controllers
             {
                 user = await _userService.CreateUserFromGoogleAsync(email, name);
             }
+
+            // ✅ Kiểm tra Premium
+            var isPremium = await _userSubscriptionService.HasActiveAsync(user.UserId);
+
+            // ✅ Đăng nhập nội bộ
+            await SignInLocalAsync(user, rememberMe: true, isPremium);
+
+            // ✅ Lưu session
+            HttpContext.Session.SetInt32("UserId", user.UserId);
+            HttpContext.Session.SetString("UserName", user.Name ?? "");
+            HttpContext.Session.SetInt32("IsPremium", isPremium ? 1 : 0);
+
+            // ✅ Redirect
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+
             return RedirectToAction("Index", "Home");
 
         }

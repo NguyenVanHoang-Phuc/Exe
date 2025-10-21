@@ -122,7 +122,7 @@ namespace MiniBitMVC.Controllers
             try
             {
                 long orderCode = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                var items = new List<ItemData> { new ItemData("Thanh toán premium", 1, 2000) };
+                var items = new List<ItemData> { new ItemData("Thanh toán premium", 1, 29000) };
 
                 var req = _httpContextAccessor.HttpContext.Request;
                 var baseUrl = $"{req.Scheme}://{req.Host}";
@@ -131,12 +131,12 @@ namespace MiniBitMVC.Controllers
                 {
                     ["planId"] = planId.ToString(),
                     ["months"] = months.ToString(),
-                    ["amount"] = "2000"
+                    ["amount"] = "29000"
                 });
 
                 var paymentData = new PaymentData(
                     orderCode,
-                    2000,
+                    29000,
                     "Thanh toan don hang",
                     items,
                     $"{baseUrl}/cancel",
